@@ -1,1 +1,52 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D AR Button</title>
+
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.3.2/aframe/build/aframe-ar.js"></script>
+
+  <script>
+    AFRAME.registerComponent("button-click", {
+      init: function () {
+        this.el.addEventListener("click", () => {
+          alert("✅ 3D Button Clicked!");
+        });
+      }
+    });
+  </script>
+</head>
+
+<body style="margin:0; overflow:hidden;">
+  <a-scene arjs="sourceType: webcam;" vr-mode-ui="enabled:false">
+
+    <a-marker preset="hiro">
+
+      <!-- 3D BUTTON BODY -->
+      <a-box
+        position="0 0.2 0"
+        depth="0.2"
+        height="0.2"
+        width="0.8"
+        color="#4CAF50"
+        button-click>
+      </a-box>
+
+      <!-- BUTTON TEXT -->
+      <a-text
+        value="MENU"
+        align="center"
+        color="white"
+        position="0 0.35 0"
+        scale="1 1 1">
+      </a-text>
+
+    </a-marker>
+
+    <!-- Enable clicking -->
+    <a-entity camera cursor="rayOrigin: mouse"></a-entity>
+
+  </a-scene>
+</body>
+</html>
