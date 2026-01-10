@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT SJT AR Navigation</title>
+<title>AR Navigation – VIT SJT (Mapbox)</title>
 
 <style>
 body {
@@ -120,13 +120,21 @@ body {
 <button id="start-btn" onclick="initAR()">Start Navigation</button>
 
 <script>
-/* ===== DESTINATION: VIT SILVER JUBILEE TOWER (SJT) ===== */
+/* ===== DESTINATION: VIT SILVER JUBILEE TOWER ===== */
 const DEST_LAT = 12.9719;
 const DEST_LON = 79.1602;
-/* ==================================================== */
 
+/* ===== MAPBOX TOKEN ===== */
+const MAPBOX_TOKEN = "pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ";
+
+/* ===== ROUTE DATA ===== */
+let routePoints = [];
+let currentPointIndex = 0;
+
+/* ===== NAV DATA ===== */
 let currentHeading = 0;
 let targetBearing = 0;
+let routeLoaded = false;
 
 /* INIT */
 async function initAR() {
@@ -175,10 +183,54 @@ function updateLocation(pos) {
 
     log(`GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`);
 
+    /* Load route once */
+    if (!routeLoaded) {
+        fetchMapboxRoute(lat, lon);
+        routeLoaded = true;
+    }
+
+    let targetLat = DEST_LAT;
+    let targetLon = DEST_LON;
+
+    /* Follow Mapbox waypoints */
+    if (routePoints.length > 0 && currentPointIndex < routePoints.length) {
+        let next = routePoints[currentPointIndex];
+        let d = distance(lat, lon, next[0], next[1]);
+
+        if (d < 15 && currentPointIndex < routePoints.length - 1) {
+            currentPointIndex++;
+            next = routePoints[currentPointIndex];
+        }
+
+        targetLat = next[0];
+        targetLon = next[1];
+    }
+
     const dist = distance(lat, lon, DEST_LAT, DEST_LON);
     updateDistance(dist);
 
-    targetBearing = bearing(lat, lon, DEST_LAT, DEST_LON);
+    targetBearing = bearing(lat, lon, targetLat, targetLon);
+}
+
+/* MAPBOX ROUTE FETCH */
+async function fetchMapboxRoute(userLat, userLon) {
+    const url =
+        `https://api.mapbox.com/directions/v5/mapbox/walking/` +
+        `${userLon},${userLat};${DEST_LON},${DEST_LAT}` +
+        `?geometries=geojson&access_token=${MAPBOX_TOKEN}`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.routes && data.routes.length > 0) {
+            routePoints = data.routes[0].geometry.coordinates
+                .map(p => [p[1], p[0]]);
+            currentPointIndex = 0;
+        }
+    } catch (e) {
+        log("Route error");
+    }
 }
 
 /* COMPASS */
