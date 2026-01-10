@@ -1,1 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wedding AR Navigation</title>
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: black;
+}
+
+/* Camera background */
+#camera-feed {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* UI overlay */
+#ui-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+
+/* Distance badge */
+.info-badge {
+    margin-top: 30px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 30px;
+    text-align: center;
+}
+
+#dist-text {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+#unit-text {
+    font-size: 14px;
+}
+
+/* Arrow */
+#arrow-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#arrow-img {
+    width: 180px;
+    height: 180px;
+    background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 0 10px gold);
+    transition: transform 0.1s linear;
+}
+
+/* Debug */
+#debug-log {
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: yellow;
+    background: rgba(0,0,0,0.6);
+    padding: 6px 10px;
+}
+
+/* Start button */
+#start-btn {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 18px 36px;
+    font-size: 20px;
+    background: #ff4081;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 100;
+}
+</style>
+</head>
+
+<body>
+
+<video id="camera-feed" autoplay playsinline muted></video>
+
+<div id="ui-layer">
+    <div class="info-badge">
+        <div id="dist-text">0</div>
+        <div id="unit-text">METERS</div>
+    </div>
+
+    <div id="arrow-container">
+        <div id="arrow-img"></div>
+    </div>
+
+    <div id="debug-log">Waiting for GPS…</div>
+</div>
+
+<button id="start-btn" onclick="initAR()">Start Navigation</button>
+
+<script>
+/* ===== DESTINATION (CHANGE THIS) ===== */
+const DEST_LAT = 12.9716;
+const DEST_LON = 77.5946;
+/* ==================================== */
+
+let currentHeading = 0;
+let targetBearing = 0;
+
+/* INIT */
+async function initAR() {
+    document.getElementById("start-btn").style.display = "none";
+
+    /* Camera */
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" } }
+        });
+        document.getElementById("camera-feed").srcObject = stream;
+    } catch (e) {
+        alert("Camera permission required");
+        log(e.message);
+    }
+
+    /* GPS */
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(updateLocation, err => {
+            log("GPS Error: " + err.message);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        });
+    }
+
+    /* Compass */
+    if (typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function") {
+
+        DeviceOrientationEvent.requestPermission().then(res => {
+            if (res === "granted") {
+                window.addEventListener("deviceorientation", handleOrientation);
+            }
+        });
+    } else {
+        window.addEventListener("deviceorientation", handleOrientation);
+    }
+}
+
+/* LOCATION UPDATE */
+function updateLocation(pos) {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    log(`GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+
+    const dist = distance(lat, lon, DEST_LAT, DEST_LON);
+    updateDistance(dist);
+
+    targetBearing = bearing(lat, lon, DEST_LAT, DEST_LON);
+}
+
+/* COMPASS */
+function handleOrientation(e) {
+    if (e.webkitCompassHeading !== undefined) {
+        currentHeading = e.webkitCompassHeading;
+    } else if (e.alpha !== null) {
+        currentHeading = 360 - e.alpha;
+    }
+
+    const rotation = targetBearing - currentHeading;
+    document.getElementById("arrow-img").style.transform =
+        `rotate(${rotation}deg)`;
+}
+
+/* MATH */
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+
+function distance(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat/2)**2 +
+        Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function bearing(lat1, lon1, lat2, lon2) {
+    const y = Math.sin(toRad(lon2-lon1)) * Math.cos(toRad(lat2));
+    const x =
+        Math.cos(toRad(lat1))*Math.sin(toRad(lat2)) -
+        Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(toRad(lon2-lon1));
+    return (toDeg(Math.atan2(y,x)) + 360) % 360;
+}
+
+/* UI */
+function updateDistance(m) {
+    if (m > 1000) {
+        document.getElementById("dist-text").innerText = (m/1000).toFixed(2);
+        document.getElementById("unit-text").innerText = "KM";
+    } else {
+        document.getElementById("dist-text").innerText = Math.round(m);
+        document.getElementById("unit-text").innerText = "METERS";
+    }
+}
+
+function log(msg) {
+    document.getElementById("debug-log").innerText = msg;
+}
+</script>
+
+</body>
+</html>
 
