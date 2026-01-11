@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT AR Nav (GPS Path Follower)</title>
+<title>VIT AR Nav (Speed Locked)</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
 
 <style>
     /* UI Reset */
     body { margin: 0; overflow: hidden; background: black; font-family: sans-serif; }
-    
-    /* Camera */
     #camera-feed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
 
     /* The AR Arrow */
@@ -21,10 +19,10 @@
         background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
         background-size: contain; background-repeat: no-repeat;
         filter: drop-shadow(0 0 10px #00e5ff);
-        transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth GPS updates */
+        transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Slower transition for stability */
     }
 
-    /* Top Info Bar */
+    /* Info Bar */
     .info-box {
         position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
         background: rgba(0, 0, 0, 0.85); color: white;
@@ -34,12 +32,17 @@
     #instruction { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
     #distance { font-size: 14px; color: #ccc; }
 
-    /* Mini Map (Bottom Right) */
+    /* Debug Status (To help you understand what's happening) */
+    #debug-status {
+        position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+        font-size: 12px; color: yellow; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 10px;
+    }
+
+    /* Mini Map */
     #mini-map {
         position: fixed; bottom: 20px; right: 20px;
         width: 150px; height: 150px; border-radius: 50%;
         border: 3px solid white; background: #333; z-index: 10;
-        box-shadow: 0 0 15px rgba(0,0,0,0.5);
     }
 
     /* Start Button */
@@ -59,6 +62,8 @@
         <span id="distance">-- m</span>
     </div>
 
+    <div id="debug-status">Status: Waiting</div>
+
     <div id="arrow-container">
         <div id="arrow-img"></div>
     </div>
@@ -73,7 +78,7 @@
     // ================= CONFIGURATION =================
     const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ'; 
     const DESTINATION = [79.1602, 12.9719]; // VIT SJT (Lng, Lat)
-    const TURN_BUBBLE = 15; // Meters (Distance to snap to next turn)
+    const TURN_BUBBLE = 15; // Meters
 
     // ================= STATE =================
     let map;
@@ -84,7 +89,7 @@
     
     // GPS Movement Variables
     let prevLat = 0, prevLng = 0;
-    let currentHeading = 0; // Calculated from walking, not compass
+    let currentHeading = 0; 
     let targetBearing = 0;  
 
     // ================= STARTUP =================
@@ -118,57 +123,68 @@
             center: DESTINATION, zoom: 17, attributionControl: false
         });
 
-        // User Marker (Blue Dot)
         const el = document.createElement('div');
         el.className = 'marker';
         el.style.backgroundColor = '#00e5ff';
         el.style.width = '15px'; el.style.height = '15px'; el.style.borderRadius = '50%';
         el.style.border = '2px solid white';
         
-        userMarker = new mapboxgl.Marker(el)
-            .setLngLat(DESTINATION) 
-            .addTo(map);
+        userMarker = new mapboxgl.Marker(el).setLngLat(DESTINATION).addTo(map);
     }
 
     // ================= CORE LOGIC =================
     function handleGPS(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        
+        // Use Native Speed/Heading if available (Most accurate)
+        const speed = pos.coords.speed || 0; // Speed in m/s
+        let gpsHeading = pos.coords.heading;
 
-        // 1. UPDATE MAP
+        // 1. UPDATE MAP VISUALS
         if (map && userMarker) {
             userMarker.setLngLat([lng, lat]);
             map.flyTo({ center: [lng, lat], zoom: 18 }); 
         }
 
-        // 2. INITIALIZE PREVIOUS POS
-        if (prevLat === 0) { prevLat = lat; prevLng = lng; }
+        // 2. HEADING STABILIZATION (The Fix)
+        if (speed > 0.5) { 
+            // We are walking fast enough (> 1.8 km/h)
+            document.getElementById("debug-status").innerText = "Status: Walking (Updating Arrow)";
+            
+            // If native heading is missing, calculate it manually
+            if (!gpsHeading && prevLat !== 0) {
+                 gpsHeading = getBearing(prevLat, prevLng, lat, lng);
+            }
 
-        // 3. CALCULATE HEADING (GPS MOVEMENT)
-        // 
-        // Only update if moved > 2 meters to stop jitter when standing still
-        const distMoved = getDistance(prevLat, prevLng, lat, lng);
-        if (distMoved > 2.0) {
-            currentHeading = getBearing(prevLat, prevLng, lat, lng);
+            if (gpsHeading) {
+                currentHeading = gpsHeading; // Only update heading if moving!
+            }
+            
+            // Update "Previous" for next calculation
             prevLat = lat;
             prevLng = lng;
+
+        } else {
+            // We are standing still (or drifting)
+            document.getElementById("debug-status").innerText = "Status: Stopped (Arrow Locked)";
+            // DO NOT update currentHeading. Keep it locked to last known direction.
         }
 
-        // 4. GET ROUTE (First run only)
+        // 3. GET ROUTE (First run only)
         if (!isNavigating) {
             getRoute(lat, lng);
             isNavigating = true; 
             return;
         }
 
-        // 5. NAVIGATION UPDATE
+        // 4. NAVIGATION UPDATE
         updateGuidance(lat, lng);
     }
 
     function updateGuidance(lat, lng) {
         if (steps.length === 0) return;
 
-        // Get the Target Node (Next Turn)
         const targetStep = steps[currentStepIndex];
         const targetLng = targetStep.maneuver.location[0];
         const targetLat = targetStep.maneuver.location[1];
@@ -185,12 +201,12 @@
             } else {
                 document.getElementById("instruction").innerText = "ARRIVED!";
                 document.getElementById("arrow-img").style.display = "none";
+                document.getElementById("debug-status").style.display = "none";
                 return;
             }
         }
 
         // CALCULATE ARROW ROTATION
-        // Bearing to Next Turn
         targetBearing = getBearing(lat, lng, targetLat, targetLng);
 
         // Rotation = Target - Current Heading
@@ -206,19 +222,15 @@
     // ================= ROUTE API =================
     async function getRoute(lat, lng) {
         document.getElementById("instruction").innerText = "Calculating Path...";
-        
-        // Fetch Walking Route
         const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${lng},${lat};${DESTINATION[0]},${DESTINATION[1]}?steps=true&geometries=geojson&access_token=${MAPBOX_TOKEN}`;
         
         try {
             const res = await fetch(url);
             const data = await res.json();
             if(data.routes && data.routes.length > 0) {
-                // Save Turn-by-Turn Steps
                 steps = data.routes[0].legs[0].steps;
-                if(steps.length > 1) steps.shift(); // Remove "Start" step
+                if(steps.length > 1) steps.shift(); 
                 
-                // Draw Blue Line
                 const routeGeoJSON = data.routes[0].geometry;
                 if (map.getSource('route')) {
                     map.getSource('route').setData(routeGeoJSON);
@@ -231,7 +243,7 @@
                         paint: { 'line-color': '#00e5ff', 'line-width': 5, 'line-opacity': 0.8 }
                     });
                 }
-                document.getElementById("instruction").innerText = "Walk to Align";
+                document.getElementById("instruction").innerText = "Start Walking";
             }
         } catch(e) { console.error(e); }
     }
