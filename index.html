@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT AR Nav (Stable)</title>
+<title>VIT Nav (Force Update)</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
 
@@ -19,8 +19,7 @@
         background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
         background-size: contain; background-repeat: no-repeat;
         filter: drop-shadow(0 0 10px #00e5ff);
-        /* Slower transition (0.5s) to smooth out movements */
-        transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1); 
+        transition: transform 0.3s linear; /* Faster transition for responsiveness */
     }
 
     /* Info Bar */
@@ -33,10 +32,10 @@
     #instruction { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
     #distance { font-size: 14px; color: #ccc; }
 
-    /* Debug Status */
+    /* Debug Status (CRITICAL FOR TESTING) */
     #debug-status {
         position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
-        font-size: 12px; color: yellow; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 10px;
+        font-size: 12px; color: lime; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 10px; text-align: center;
     }
 
     /* Mini Map */
@@ -64,7 +63,7 @@
         <span id="distance">-- m</span>
     </div>
 
-    <div id="debug-status">Status: Waiting</div>
+    <div id="debug-status">Waiting for GPS...</div>
 
     <div id="arrow-container">
         <div id="arrow-img"></div>
@@ -93,7 +92,6 @@
     let prevLat = 0, prevLng = 0;
     let currentHeading = 0; 
     let targetBearing = 0; 
-    let headingHistory = []; // Stores last 5 headings for averaging
 
     // ================= STARTUP =================
     async function startApp() {
@@ -136,44 +134,51 @@
         userMarker = new mapboxgl.Marker(userEl).setLngLat(DESTINATION).addTo(map);
     }
 
-    // ================= CORE LOGIC =================
+    // ================= CORE LOGIC (MANUAL MOVEMENT CHECK) =================
     function handleGPS(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const speed = pos.coords.speed || 0; 
+        const accuracy = pos.coords.accuracy || 0;
 
+        // 1. UPDATE MAP
         if (map && userMarker) {
             userMarker.setLngLat([lng, lat]);
             map.setCenter([lng, lat]); 
         }
 
-        // 🟢 FIX 1: HEADING AVERAGING
-        // Only update if moving fast enough (reduces jitter)
-        if (speed > 0.5) { 
-            document.getElementById("debug-status").innerText = "Status: Walking";
-            
-            // Calculate raw heading from last point
-            if (prevLat !== 0) {
-                 let rawHeading = getBearing(prevLat, prevLng, lat, lng);
-                 
-                 // Push to history array (Keep max 5 items)
-                 headingHistory.push(rawHeading);
-                 if (headingHistory.length > 5) headingHistory.shift();
-
-                 // Calculate AVERAGE heading
-                 let sum = 0;
-                 for(let h of headingHistory) sum += h;
-                 currentHeading = sum / headingHistory.length;
-
-                 // Rotate Map
-                 map.easeTo({ bearing: currentHeading, duration: 1000, easing: x => x });
-            }
-            
+        // 2. CHECK MOVEMENT (Manual Calculation)
+        // If this is the first point, just save it
+        if (prevLat === 0) {
             prevLat = lat; prevLng = lng;
-        } else {
-            document.getElementById("debug-status").innerText = "Status: Stopped (Locked)";
+            return;
         }
 
+        // Calculate distance moved since last update
+        const distMoved = getDistance(prevLat, prevLng, lat, lng);
+        
+        // Debug Text (So you can see what is happening!)
+        document.getElementById("debug-status").innerText = 
+            `Moved: ${distMoved.toFixed(1)}m | Acc: ${Math.round(accuracy)}m`;
+
+        // 🔴 THE FIX: Force update if moved > 2 meters (Ignore phone "Speed")
+        if (distMoved > 2.0) { 
+            
+            // Calculate Heading based on change in position
+            currentHeading = getBearing(prevLat, prevLng, lat, lng);
+            
+            // Rotate Map to Face Forward
+            map.easeTo({ bearing: currentHeading, duration: 1000, easing: x => x });
+            
+            // Update Previous Position
+            prevLat = lat; 
+            prevLng = lng;
+            
+        } else {
+            // We haven't moved enough. KEEP OLD HEADING. Do not update.
+            // This stops the jitter when standing still.
+        }
+
+        // 3. GET ROUTE (First run only)
         if (!isNavigating) {
             getRoute(lat, lng);
             isNavigating = true; 
@@ -198,8 +203,6 @@
         if (dist < TURN_BUBBLE) {
             if (currentStepIndex < steps.length - 1) {
                 currentStepIndex++;
-                // Clear history on turn to allow fast updates
-                headingHistory = []; 
             } else {
                 document.getElementById("instruction").innerText = "ARRIVED!";
                 document.getElementById("arrow-img").style.display = "none";
@@ -207,19 +210,15 @@
             }
         }
 
-        // 🟢 FIX 2: SNAP TO STRAIGHT (Visual Deadzone)
+        // CALCULATE ROTATION
         targetBearing = getBearing(lat, lng, targetLat, targetLng);
         let rot = targetBearing - currentHeading;
         
-        // Normalize angle
         while(rot < -180) rot += 360;
         while(rot > 180) rot -= 360;
 
-        // THE MAGIC TRICK: If angle is small (< 25 degrees), force it straight!
-        // This stops the arrow from pointing "slightly right" when you are basically straight.
-        if (Math.abs(rot) < 25) {
-            rot = 0;
-        }
+        // Snap to straight if angle is small (Forgiving Arrow)
+        if (Math.abs(rot) < 20) rot = 0;
 
         document.getElementById("arrow-img").style.transform = `rotate(${rot}deg)`;
     }
