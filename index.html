@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT AR Nav (Speed Locked)</title>
+<title>VIT AR Nav (Stable)</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
 
@@ -19,7 +19,8 @@
         background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
         background-size: contain; background-repeat: no-repeat;
         filter: drop-shadow(0 0 10px #00e5ff);
-        transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Slower transition for stability */
+        /* Slower transition (0.5s) to smooth out movements */
+        transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1); 
     }
 
     /* Info Bar */
@@ -27,12 +28,12 @@
         position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
         background: rgba(0, 0, 0, 0.85); color: white;
         padding: 15px 25px; border-radius: 30px; text-align: center;
-        border: 2px solid #00e5ff; width: 80%; z-index: 10;
+        border: 2px solid #00e5ff; width: 85%; z-index: 10;
     }
     #instruction { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
     #distance { font-size: 14px; color: #ccc; }
 
-    /* Debug Status (To help you understand what's happening) */
+    /* Debug Status */
     #debug-status {
         position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
         font-size: 12px; color: yellow; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 10px;
@@ -43,6 +44,7 @@
         position: fixed; bottom: 20px; right: 20px;
         width: 150px; height: 150px; border-radius: 50%;
         border: 3px solid white; background: #333; z-index: 10;
+        transform: rotateX(0deg); 
     }
 
     /* Start Button */
@@ -58,7 +60,7 @@
     <video id="camera-feed" autoplay playsinline muted></video>
 
     <div class="info-box">
-        <span id="instruction">Waiting for Start...</span>
+        <span id="instruction">To Q-Block...</span>
         <span id="distance">-- m</span>
     </div>
 
@@ -77,7 +79,7 @@
 <script>
     // ================= CONFIGURATION =================
     const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ'; 
-    const DESTINATION = [79.1638, 12.9742]; // VIT SJT (Lng, Lat)
+    const DESTINATION = [79.1638, 12.9742]; // Q-Block
     const TURN_BUBBLE = 15; // Meters
 
     // ================= STATE =================
@@ -87,23 +89,22 @@
     let currentStepIndex = 0;
     let isNavigating = false;
     
-    // GPS Movement Variables
+    // Stability Variables
     let prevLat = 0, prevLng = 0;
     let currentHeading = 0; 
-    let targetBearing = 0;  
+    let targetBearing = 0; 
+    let headingHistory = []; // Stores last 5 headings for averaging
 
     // ================= STARTUP =================
     async function startApp() {
         document.getElementById("start-btn").style.display = "none";
         document.getElementById("instruction").innerText = "Walk to Align...";
 
-        // 1. Camera
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById("camera-feed").srcObject = stream;
         } catch(e) { console.error("Cam error", e); }
 
-        // 2. Map & GPS
         initMap();
         
         if(navigator.geolocation) {
@@ -120,65 +121,65 @@
         map = new mapboxgl.Map({
             container: 'mini-map',
             style: 'mapbox://styles/mapbox/dark-v11',
-            center: DESTINATION, zoom: 17, attributionControl: false
+            center: DESTINATION, zoom: 17, pitch: 40, attributionControl: false
         });
 
+        // Add Markers
         const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.backgroundColor = '#00e5ff';
-        el.style.width = '15px'; el.style.height = '15px'; el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        
-        userMarker = new mapboxgl.Marker(el).setLngLat(DESTINATION).addTo(map);
+        el.className = 'marker'; el.style.backgroundColor = 'red';
+        el.style.width = '15px'; el.style.height = '15px'; el.style.borderRadius = '50%'; el.style.border = '2px solid white';
+        new mapboxgl.Marker(el).setLngLat(DESTINATION).addTo(map);
+
+        const userEl = document.createElement('div');
+        userEl.className = 'marker'; userEl.style.backgroundColor = '#00e5ff';
+        userEl.style.width = '15px'; userEl.style.height = '15px'; userEl.style.borderRadius = '50%'; userEl.style.border = '2px solid white';
+        userMarker = new mapboxgl.Marker(userEl).setLngLat(DESTINATION).addTo(map);
     }
 
     // ================= CORE LOGIC =================
     function handleGPS(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        
-        // Use Native Speed/Heading if available (Most accurate)
-        const speed = pos.coords.speed || 0; // Speed in m/s
-        let gpsHeading = pos.coords.heading;
+        const speed = pos.coords.speed || 0; 
 
-        // 1. UPDATE MAP VISUALS
         if (map && userMarker) {
             userMarker.setLngLat([lng, lat]);
-            map.flyTo({ center: [lng, lat], zoom: 18 }); 
+            map.setCenter([lng, lat]); 
         }
 
-        // 2. HEADING STABILIZATION (The Fix)
+        // 🟢 FIX 1: HEADING AVERAGING
+        // Only update if moving fast enough (reduces jitter)
         if (speed > 0.5) { 
-            // We are walking fast enough (> 1.8 km/h)
-            document.getElementById("debug-status").innerText = "Status: Walking (Updating Arrow)";
+            document.getElementById("debug-status").innerText = "Status: Walking";
             
-            // If native heading is missing, calculate it manually
-            if (!gpsHeading && prevLat !== 0) {
-                 gpsHeading = getBearing(prevLat, prevLng, lat, lng);
-            }
+            // Calculate raw heading from last point
+            if (prevLat !== 0) {
+                 let rawHeading = getBearing(prevLat, prevLng, lat, lng);
+                 
+                 // Push to history array (Keep max 5 items)
+                 headingHistory.push(rawHeading);
+                 if (headingHistory.length > 5) headingHistory.shift();
 
-            if (gpsHeading) {
-                currentHeading = gpsHeading; // Only update heading if moving!
+                 // Calculate AVERAGE heading
+                 let sum = 0;
+                 for(let h of headingHistory) sum += h;
+                 currentHeading = sum / headingHistory.length;
+
+                 // Rotate Map
+                 map.easeTo({ bearing: currentHeading, duration: 1000, easing: x => x });
             }
             
-            // Update "Previous" for next calculation
-            prevLat = lat;
-            prevLng = lng;
-
+            prevLat = lat; prevLng = lng;
         } else {
-            // We are standing still (or drifting)
-            document.getElementById("debug-status").innerText = "Status: Stopped (Arrow Locked)";
-            // DO NOT update currentHeading. Keep it locked to last known direction.
+            document.getElementById("debug-status").innerText = "Status: Stopped (Locked)";
         }
 
-        // 3. GET ROUTE (First run only)
         if (!isNavigating) {
             getRoute(lat, lng);
             isNavigating = true; 
             return;
         }
 
-        // 4. NAVIGATION UPDATE
         updateGuidance(lat, lng);
     }
 
@@ -194,27 +195,31 @@
         document.getElementById("instruction").innerText = targetStep.maneuver.instruction;
         document.getElementById("distance").innerText = Math.round(dist) + " meters";
 
-        // ARRIVED AT WAYPOINT? -> Switch to next one
         if (dist < TURN_BUBBLE) {
             if (currentStepIndex < steps.length - 1) {
                 currentStepIndex++;
+                // Clear history on turn to allow fast updates
+                headingHistory = []; 
             } else {
                 document.getElementById("instruction").innerText = "ARRIVED!";
                 document.getElementById("arrow-img").style.display = "none";
-                document.getElementById("debug-status").style.display = "none";
                 return;
             }
         }
 
-        // CALCULATE ARROW ROTATION
+        // 🟢 FIX 2: SNAP TO STRAIGHT (Visual Deadzone)
         targetBearing = getBearing(lat, lng, targetLat, targetLng);
-
-        // Rotation = Target - Current Heading
         let rot = targetBearing - currentHeading;
         
-        // Normalize angle (-180 to 180)
+        // Normalize angle
         while(rot < -180) rot += 360;
         while(rot > 180) rot -= 360;
+
+        // THE MAGIC TRICK: If angle is small (< 25 degrees), force it straight!
+        // This stops the arrow from pointing "slightly right" when you are basically straight.
+        if (Math.abs(rot) < 25) {
+            rot = 0;
+        }
 
         document.getElementById("arrow-img").style.transform = `rotate(${rot}deg)`;
     }
@@ -243,12 +248,12 @@
                         paint: { 'line-color': '#00e5ff', 'line-width': 5, 'line-opacity': 0.8 }
                     });
                 }
-                document.getElementById("instruction").innerText = "Start Walking";
+                document.getElementById("instruction").innerText = "Walk to Align";
             }
         } catch(e) { console.error(e); }
     }
 
-    // ================= MATH HELPERS =================
+    // ================= MATH =================
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const dLat = (lat2 - lat1) * Math.PI / 180;
