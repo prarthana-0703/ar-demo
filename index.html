@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT AR Navigation (Hybrid)</title>
+<title>AR Navigation (GPS Only)</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
 
@@ -11,31 +11,21 @@
     /* --- 1. LAYOUT --- */
     body { margin: 0; overflow: hidden; background: black; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    #camera-feed {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        object-fit: cover; z-index: -1;
-    }
-
-    #ui-layer {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        display: flex; flex-direction: column; pointer-events: none;
-    }
+    #camera-feed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
+    #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
     /* --- 2. UI ELEMENTS --- */
     
     /* Distance Badge */
-    .info-badge {
-        position: absolute; top: 30px; width: 100%; text-align: center;
-    }
+    .info-badge { position: absolute; top: 30px; width: 100%; text-align: center; }
     .badge-inner {
         display: inline-block; background: rgba(0, 0, 0, 0.85); color: white;
         padding: 10px 30px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);
-        backdrop-filter: blur(4px); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     #dist-text { font-size: 32px; font-weight: 800; display: block; }
     #status-text { font-size: 11px; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* AR Arrow (Points to Destination) */
+    /* AR Arrow */
     #arrow-container {
         position: absolute; bottom: 80px; right: 200px; /* Left of the map */
         width: 100px; height: 100px;
@@ -46,27 +36,17 @@
         background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
         background-size: contain; background-repeat: no-repeat;
         filter: drop-shadow(0 0 15px #00e5ff); 
-        transition: transform 0.1s linear; /* Smooth but responsive */
+        transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smoother transition for GPS */
     }
 
-    /* Mini Map (Shows the Path) */
+    /* Mini Map */
     #mini-map-container {
         position: absolute; bottom: 30px; right: 20px;
         width: 160px; height: 160px;
         border-radius: 50%; border: 3px solid white; 
         overflow: hidden; background: #222; pointer-events: auto;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.8);
     }
     #map { width: 100%; height: 100%; }
-
-    /* Calibration Slider */
-    #calibration-container {
-        position: absolute; bottom: 120px; left: 20px;
-        width: 150px; pointer-events: auto;
-        background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px;
-        color: white; text-align: center;
-    }
-    input[type=range] { width: 100%; }
 
     /* Start Button */
     #start-btn {
@@ -74,7 +54,6 @@
         padding: 15px 40px; font-size: 18px; font-weight: bold;
         background: #007cbf; color: white; border: none; border-radius: 50px;
         cursor: pointer; pointer-events: auto; z-index: 1000;
-        box-shadow: 0 0 20px rgba(0, 124, 191, 0.6);
     }
 </style>
 </head>
@@ -84,7 +63,6 @@
     <video id="camera-feed" autoplay playsinline muted></video>
 
     <div id="ui-layer">
-        
         <div class="info-badge">
             <div class="badge-inner">
                 <span id="dist-text">-- m</span>
@@ -99,12 +77,6 @@
         <div id="mini-map-container">
             <div id="map"></div>
         </div>
-
-        <div id="calibration-container">
-            <div style="font-size:10px; margin-bottom:5px;">ALIGN COMPASS</div>
-            <input type="range" min="-180" max="180" value="0" step="1" oninput="manualOffset = parseInt(this.value); updateArrow();">
-        </div>
-
     </div>
 
     <button id="start-btn" onclick="startSystem()">START NAVIGATION</button>
@@ -113,27 +85,22 @@
 
 <script>
     /* ================= 1. CONFIGURATION ================= */
-    const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ'; // 🔴 PASTE TOKEN HERE
+    const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ'; 
     const DESTINATION = { lat: 12.9719, lng: 79.1602 }; // VIT SJT
-
-    // Tuning Factors (The "Special Sauce")
-    const SMOOTHING_FACTOR = 0.05; // Very smooth (fixes jitter)
-    const ARRIVAL_DIST = 20;       // Meters to trigger arrival
+    const ARRIVAL_DIST = 15;
 
     /* ================= 2. STATE ================= */
     let map, userMarker;
     let smoothLat = 0, smoothLng = 0;
-    let currentHeading = 0, smoothedHeading = 0;
+    let prevLat = 0, prevLng = 0; // NEW: To track movement
+    let movementHeading = 0;      // NEW: Calculated from walking
     let lastTargetBearing = 0;
-    let manualOffset = 0;
     let hasArrived = false;
 
     /* ================= 3. STARTUP ================= */
     async function startSystem() {
-        if(MAPBOX_TOKEN.includes('YOUR')) return alert("Paste Mapbox Token!");
-
         document.getElementById("start-btn").style.display = "none";
-        document.getElementById("status-text").innerText = "Aligning Sensors...";
+        document.getElementById("status-text").innerText = "Walk to Align...";
 
         // A. Camera
         try {
@@ -141,11 +108,10 @@
             document.getElementById("camera-feed").srcObject = stream;
         } catch(e) { console.error("Camera failed", e); }
 
-        // B. Mapbox (For Visuals Only)
+        // B. Mapbox
         initMapbox();
 
-        // C. Compass & GPS
-        setupCompass();
+        // C. GPS Only (No Compass)
         if(navigator.geolocation) {
             navigator.geolocation.watchPosition(handleLocation, console.warn, { enableHighAccuracy: true, maximumAge: 0 });
         }
@@ -155,10 +121,9 @@
         mapboxgl.accessToken = MAPBOX_TOKEN;
         map = new mapboxgl.Map({
             container: 'map', style: 'mapbox://styles/mapbox/dark-v11',
-            center: [DESTINATION.lng, DESTINATION.lat], zoom: 16, attributionControl: false
+            center: [DESTINATION.lng, DESTINATION.lat], zoom: 17, attributionControl: false
         });
 
-        // User Marker
         const el = document.createElement('div');
         el.style.width = '15px'; el.style.height = '15px';
         el.style.backgroundColor = '#00e5ff'; el.style.borderRadius = '50%';
@@ -166,57 +131,72 @@
         userMarker = new mapboxgl.Marker(el).setLngLat([DESTINATION.lng, DESTINATION.lat]).addTo(map);
     }
 
-    /* ================= 4. CORE LOGIC (HYBRID) ================= */
+    /* ================= 4. GPS MOVEMENT LOGIC ================= */
     function handleLocation(pos) {
         if(hasArrived) return;
 
         const rawLat = pos.coords.latitude;
         const rawLng = pos.coords.longitude;
-        const acc = pos.coords.accuracy;
 
-        // 1. Smooth GPS Data (Reduces jumpiness)
-        if (smoothLat === 0) { smoothLat = rawLat; smoothLng = rawLng; }
-        else {
+        // 1. Smooth GPS Data
+        if (smoothLat === 0) { 
+            smoothLat = rawLat; smoothLng = rawLng; 
+            prevLat = rawLat; prevLng = rawLng; // Init previous
+        } else {
             smoothLat += (rawLat - smoothLat) * 0.2;
             smoothLng += (rawLng - smoothLng) * 0.2;
         }
 
-        // 2. Update Map Visuals
+        // 2. CALCULATE HEADING FROM MOVEMENT
+        // Only update if we moved > 2 meters (prevents jitter while standing)
+        const distMoved = getDistance(prevLat, prevLng, smoothLat, smoothLng);
+        
+        if (distMoved > 2.0) {
+            // We are walking! Update our heading.
+            movementHeading = getBearing(prevLat, prevLng, smoothLat, smoothLng);
+            
+            // Update 'Previous' for next step
+            prevLat = smoothLat;
+            prevLng = smoothLng;
+            
+            document.getElementById("status-text").innerText = "Walking...";
+        }
+
+        // 3. Update Visuals
         if(map && userMarker) {
             userMarker.setLngLat([smoothLng, smoothLat]);
             map.setCenter([smoothLng, smoothLat]);
         }
 
-        // 3. Fetch Route Visual (First time only)
         if (!map.getSource('route')) fetchRoutePath(smoothLat, smoothLng);
-
-        // 4. Update Navigation Data
         updateGuidance(smoothLat, smoothLng);
     }
 
     function updateGuidance(lat, lng) {
         const totalDist = getDistance(lat, lng, DESTINATION.lat, DESTINATION.lng);
 
-        // Arrival Check
         if (totalDist < ARRIVAL_DIST) {
             hasArrived = true;
             document.getElementById("dist-text").innerText = "0 m";
-            document.getElementById("status-text").innerText = "ARRIVED AT SJT! 🎉";
+            document.getElementById("status-text").innerText = "ARRIVED! 🎉";
             document.getElementById("arrow-img").style.display = "none";
             return;
         }
 
         document.getElementById("dist-text").innerText = Math.round(totalDist) + " m";
-        document.getElementById("status-text").innerText = "Go Straight";
 
-        // HYBRID LOGIC: Point directly to destination (Stable)
+        // HYBRID LOGIC: 
+        // Bearing to Destination - Heading from Movement
         lastTargetBearing = getBearing(lat, lng, DESTINATION.lat, DESTINATION.lng);
-        updateArrow();
+        
+        let rot = lastTargetBearing - movementHeading;
+        while(rot < -180) rot += 360; while(rot > 180) rot -= 360;
+        
+        document.getElementById("arrow-img").style.transform = `rotate(${rot}deg)`;
     }
 
-    /* ================= 5. ROUTE VISUALIZATION (MAP ONLY) ================= */
+    /* ================= 5. ROUTE VISUALIZATION ================= */
     async function fetchRoutePath(lat, lng) {
-        // We fetch the route purely to draw the blue line on the map
         const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${lng},${lat};${DESTINATION.lng},${DESTINATION.lat}?geometries=geojson&access_token=${MAPBOX_TOKEN}`;
         try {
             const res = await fetch(url);
@@ -229,32 +209,7 @@
         } catch(e) { console.warn("Map route failed", e); }
     }
 
-    /* ================= 6. COMPASS & ARROW ================= */
-    function setupCompass() {
-        const handler = (e) => {
-            let heading = e.webkitCompassHeading || (e.alpha ? 360 - e.alpha : 0);
-            
-            // Heavy Smoothing (Fixes Jitter)
-            let diff = heading - smoothedHeading;
-            while(diff < -180) diff += 360; while(diff > 180) diff -= 360;
-            smoothedHeading += diff * SMOOTHING_FACTOR; // 0.05 factor
-            currentHeading = smoothedHeading;
-
-            updateArrow();
-        };
-
-        if ('ondeviceorientationabsolute' in window) window.addEventListener("deviceorientationabsolute", handler);
-        else window.addEventListener("deviceorientation", handler);
-    }
-
-    function updateArrow() {
-        // Formula: Bearing (Where to go) - Heading (Where you face) + Calibration
-        let rot = lastTargetBearing - currentHeading + manualOffset;
-        while(rot < -180) rot += 360; while(rot > 180) rot -= 360;
-        document.getElementById("arrow-img").style.transform = `rotate(${rot}deg)`;
-    }
-
-    /* ================= 7. MATH ================= */
+    /* ================= 6. MATH ================= */
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
