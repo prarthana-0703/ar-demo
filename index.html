@@ -2,155 +2,134 @@
 <html>
 <head>
   <title>AR Wedding Invitation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <!-- ✅ STABLE CDN (IMPORTANT CHANGE) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; background: black; }
+    /* 🛑 CRITICAL FIX FOR BLACK SCREEN */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent !important; }
+    
+    #arjs-video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: -2 !important; /* Forces camera behind 3D objects */
+    }
 
-    /* START BUTTON */
     #startBtn {
       position: fixed;
-      top: 40%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 15px 25px;
+      padding: 20px 40px;
       background: #ff477e;
       color: white;
-      font-size: 18px;
+      font-size: 20px;
+      font-weight: bold;
       border: none;
-      border-radius: 10px;
-      z-index: 9999;
+      border-radius: 50px;
+      z-index: 9999; /* Always on top */
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
 
-    /* MENU */
     #menu {
-      position: fixed;
-      bottom: 20px;
-      width: 100%;
-      text-align: center;
-      z-index: 1000;
+      position: fixed; bottom: 20px; width: 100%; text-align: center; z-index: 1000; display: none;
     }
-
     #menu button {
-      margin: 5px;
-      padding: 10px 15px;
-      border-radius: 20px;
-      border: none;
-      background: #ff477e;
-      color: white;
+      margin: 5px; padding: 12px 20px; border-radius: 25px; border: none;
+      background: #ff477e; color: white; font-weight: bold;
     }
   </style>
 
   <script>
-    // 🌸 PETALS
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-
         const texture = new THREE.TextureLoader().load('rose_petal.png');
-
-        for (let i = 0; i < 50; i++) {
-          const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, 0.2),
-            new THREE.MeshBasicMaterial({
-              map: texture,
-              transparent: true,
-              side: THREE.DoubleSide
-            })
-          );
-
-          petal.position.set(
-            (Math.random()-0.5)*4,
-            Math.random()*3+1,
-            Math.random()*2
-          );
-
+        for (let i = 0; i < 60; i++) {
+          const material = new THREE.MeshBasicMaterial({
+            map: texture, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, depthWrite: false
+          });
+          const petal = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), material);
+          petal.position.set((Math.random()-0.5)*6, (Math.random()*4)+1, Math.random()*2);
+          petal.userData.spin = { x: Math.random()*0.04, y: Math.random()*0.04 };
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
-
       tick: function () {
         this.petals.forEach(p => {
           p.position.y -= 0.02;
-          if (p.position.y < -1) p.position.y = 3;
+          p.rotation.x += p.userData.spin.x;
+          if (p.position.y < -1.5) p.position.y = 4;
         });
       }
     });
   </script>
 </head>
 
-<body>
+<body style="margin: 0px; overflow: hidden;">
 
-<!-- 🔴 START BUTTON (VERY IMPORTANT) -->
-<button id="startBtn">Start AR 💖</button>
+  <button id="startBtn">TAP TO OPEN INVITATION 💖</button>
 
-<div id="menu">
-  <button onclick="location.reload()">Refresh</button>
-</div>
+  <div id="menu">
+    <button onclick="location.reload()">🔄 Refresh</button>
+    <button onclick="window.open('http://google.com')">📍 Location</button>
+  </div>
 
-<a-scene embedded vr-mode-ui="enabled:false"
-         renderer="antialias:true"
-         arjs="sourceType: webcam; facingMode: environment; debugUIEnabled: false;">
+  <a-scene embedded vr-mode-ui="enabled: false"
+           arjs="sourceType: webcam; debugUIEnabled: false; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;">
 
-  <a-marker preset="hiro">
+    <a-marker preset="hiro">
+      <a-entity petal-rain></a-entity>
 
-    <a-entity petal-rain></a-entity>
+      <a-torus position="0 1.6 0" radius="0.25" radius-tubular="0.04" color="#FFD700"
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 4500"></a-torus>
 
-    <!-- 💍 RING -->
-    <a-torus position="0 1 0"
-             radius="0.3"
-             radius-tubular="0.05"
-             color="gold"
-             animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-    </a-torus>
+      <a-entity position="0 0.2 0" rotation="-90 0 0">
+        <a-plane width="3.5" height="1.4" color="#000" opacity="0.7"></a-plane>
+        <a-text id="nameText" value="Dear Guest ✨" align="center" color="#FFFFFF" width="5" position="0 0.3 0.1"></a-text>
+        <a-text value="Join us as we celebrate our love! ❤️" align="center" color="#FFB6C1" width="3.2" position="0 -0.2 0.1"></a-text>
+      </a-entity>
+    </a-marker>
 
-    <!-- 💖 TEXT -->
-    <a-entity position="0 0.2 0">
-      <a-plane width="3" height="1" color="#000" opacity="0.7"></a-plane>
+    <a-entity camera="fov: 80"></a-entity>
+  </a-scene>
 
-      <a-text id="nameText"
-              value="Dear Guest"
-              align="center"
-              color="white"
-              position="0 0.2 0.01">
-      </a-text>
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const menu = document.getElementById("menu");
 
-      <a-text value="Join us on our big day ❤️"
-              align="center"
-              color="pink"
-              position="0 -0.2 0.01">
-      </a-text>
-    </a-entity>
+    startBtn.addEventListener("click", () => {
+      // 1. Start the A-Frame Scene
+      const scene = document.querySelector("a-scene");
+      scene.style.display = "block";
+      
+      // 2. Hide Button, Show Menu
+      startBtn.style.display = "none";
+      menu.style.display = "block";
 
-  </a-marker>
+      // 3. Force Video Play (Crucial for Samsung Chrome)
+      const video = document.querySelector("#arjs-video");
+      if (video) {
+        video.play();
+      }
+    });
 
-  <a-entity camera></a-entity>
-
-</a-scene>
-
-<script>
-  // ✅ START CAMERA ON CLICK
-  document.getElementById("startBtn").addEventListener("click", () => {
-    document.querySelector("a-scene").play();
-    document.getElementById("startBtn").style.display = "none";
-  });
-
-  // NAME PERSONALIZATION
-  const params = new URLSearchParams(window.location.search);
-  let name = params.get("name") || "Friend";
-
-  name = name.charAt(0).toUpperCase() + name.slice(1);
-
-  setTimeout(() => {
-    document.getElementById("nameText")
-      .setAttribute("value", `Dear ${name} 💖`);
-  }, 1500);
-</script>
+    // Personalization logic
+    const params = new URLSearchParams(window.location.search);
+    let guestName = params.get("name") || "Friend";
+    guestName = guestName.charAt(0).toUpperCase() + guestName.slice(1);
+    
+    setTimeout(() => {
+      document.querySelector("#nameText").setAttribute("value", `Dear ${guestName} ✨`);
+    }, 1000);
+  </script>
 
 </body>
 </html>
