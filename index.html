@@ -8,13 +8,8 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; }
-    /* This helps prevent the 'zoomed' look by forcing the video to fit correctly */
-    #arjs-video {
-      object-fit: cover !important;
-      width: 100vw !important;
-      height: 100vh !important;
-    }
+    body { margin: 0; overflow: hidden; background: #000; }
+    #arjs-video { object-fit: cover !important; width: 100vw !important; height: 100vh !important; }
   </style>
 </head>
 
@@ -23,39 +18,41 @@
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
-    renderer="antialias: true; precision: medium;"
-    arjs="sourceType: webcam; 
-          debugUIEnabled: false; 
-          displayWidth: 100%; 
-          displayHeight: 100%; 
-          fitSelected: true;">
+    arjs="sourceType: webcam; debugUIEnabled: false; fitSelected: true;">
 
     <a-marker preset="hiro">
+      
+      <a-plane position="0 0.5 0" 
+               rotation="-90 0 0" 
+               width="2.5" height="1.2" 
+               material="color: #000; opacity: 0.6">
+      </a-plane>
 
-      <a-entity position="0 0.8 0" 
-                animation="property: position; to: 0 1.0 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+      <a-entity position="0 0.6 0" 
+                animation="property: position; to: 0 0.7 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
         
         <a-text id="nameText"
                 value="Loading..."
                 align="center"
-                color="#FFD700"
-                scale="1.5 1.5 1.5">
+                color="#FFFFFF"
+                width="4"
+                position="0 0.2 0.1">
         </a-text>
 
         <a-text id="msgText"
                 value=""
-                position="0 -0.4 0"
                 align="center"
-                color="#FFC0CB"
-                scale="1 1 1"
-                animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
+                color="#FF69B4"
+                width="3"
+                position="0 -0.2 0.1">
         </a-text>
 
-        <a-entity geometry="primitive: torusKnot; radius: 0.2; radiusTubular: 0.02;"
-                  position="0 -0.8 0"
-                  material="color: #ff477e; opacity: 0.8"
-                  animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
-        </a-entity>
+        <a-box position="0 -0.5 0" 
+               scale="0.3 0.3 0.3" 
+               material="color: #FF1493;"
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+        </a-box>
+
       </a-entity>
 
     </a-marker>
@@ -68,23 +65,19 @@
     document.addEventListener("DOMContentLoaded", function () {
       const params = new URLSearchParams(window.location.search);
       let name = params.get("name") || "Guest";
-
-      // Capitalize first letter
       name = name.charAt(0).toUpperCase() + name.slice(1);
 
       const messages = [
-        "You are invited to our wedding 💍",
-        "Join us on our special day ❤️",
-        "Celebrate love with us 💖",
-        "Be part of our beautiful journey ✨"
+        "Please join us on our special day! 💍",
+        "We're getting married! ❤️",
+        "Celebrate this journey with us ✨"
       ];
 
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
       const scene = document.querySelector("a-scene");
 
-      // Set text once AR is ready
       scene.addEventListener("loaded", () => {
-        document.querySelector("#nameText").setAttribute("value", `Welcome ${name} 💖`);
+        document.querySelector("#nameText").setAttribute("value", `Welcome ${name}`);
         document.querySelector("#msgText").setAttribute("value", randomMsg);
       });
     });
