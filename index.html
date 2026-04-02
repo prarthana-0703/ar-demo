@@ -2,58 +2,22 @@
 <html>
 <head>
   <title>AR Wedding Invitation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-  <!-- ✅ Stable versions -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: black;
-    }
-
-    /* ✅ FORCE FULL SCREEN CAMERA */
-    video, canvas, .a-canvas {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-    }
-
-    /* START BUTTON */
-    #startBtn {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 18px 30px;
-      background: #ff477e;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 30px;
-      z-index: 9999;
-    }
-
-    /* MENU */
+    body { margin: 0; overflow: hidden; background: #000; }
+    
+    /* UI Buttons */
     #menu {
       position: fixed;
       bottom: 20px;
       width: 100%;
       text-align: center;
       z-index: 1000;
-      display: none;
     }
-
     #menu button {
       margin: 5px;
       padding: 10px 15px;
@@ -61,43 +25,58 @@
       border: none;
       background: #ff477e;
       color: white;
+      font-weight: bold;
+      font-size: 13px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      cursor: pointer;
     }
+    .refresh-btn { background: #444 !important; }
   </style>
 
   <script>
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-        const texture = new THREE.TextureLoader().load('rose_petal.png');
+        // Pull texture from the preloaded assets
+        const imgEl = document.querySelector('#roseTexture');
+        const texture = new THREE.Texture(imgEl);
+        texture.needsUpdate = true;
 
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 70; i++) {
+          const size = Math.random() * 0.2 + 0.15;
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
-            alphaTest: 0.3,
-            side: THREE.DoubleSide
+            alphaTest: 0.2, // Clean edges
+            side: THREE.DoubleSide,
+            depthWrite: false
           });
 
-          const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, 0.2),
-            material
-          );
-
+          const petal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
+          
+          // Random scatter
           petal.position.set(
-            (Math.random()-0.5)*5,
-            Math.random()*3+1,
-            Math.random()*2
+            (Math.random() - 0.5) * 6, 
+            (Math.random() * 5) + 2, 
+            (Math.random() - 0.5) * 4
           );
 
+          petal.userData.spin = { x: Math.random() * 0.04, y: Math.random() * 0.04 };
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
-
       tick: function () {
-        this.petals.forEach(p => {
-          p.position.y -= 0.02;
-          if (p.position.y < -1) p.position.y = 3;
+        this.petals.forEach(petal => {
+          petal.position.y -= 0.02; // Falling speed
+          petal.rotation.x += petal.userData.spin.x;
+          petal.rotation.y += petal.userData.spin.y;
+          
+          // Loop back to top
+          if (petal.position.y < -1.5) {
+            petal.position.y = 4;
+            petal.position.x = (Math.random() - 0.5) * 6;
+          }
         });
       }
     });
@@ -106,81 +85,57 @@
 
 <body>
 
-<button id="startBtn">Tap to Open 💖</button>
+  <div id="menu">
+    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+    <button onclick="window.location.href='events.html'">📅 Events</button>
+    <button onclick="window.open('https://maps.app.goo.gl/YourLinkHere')">📍 Location</button>
+  </div>
 
-<div id="menu">
-  <button onclick="location.reload()">Refresh</button>
-  <button onclick="window.open('https://maps.google.com')">Location</button>
-</div>
+  <a-scene embedded vr-mode-ui="enabled: false"
+           arjs="sourceType: webcam; debugUIEnabled: false;">
 
-<a-scene
-  embedded
-  vr-mode-ui="enabled:false"
-  renderer="antialias:true"
-  arjs="sourceType: webcam; facingMode: environment; debugUIEnabled:false;">
+    <a-assets>
+      <img id="roseTexture" src="rose_petal.png" crossorigin="anonymous">
+    </a-assets>
 
-  <a-marker preset="hiro">
+    <a-marker preset="hiro">
+      <a-entity petal-rain></a-entity>
 
-    <!-- 🌸 Petals -->
-    <a-entity petal-rain></a-entity>
+      <a-torus position="0 0.3 0" radius="0.3" radius-tubular="0.05" color="#FFD700"
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-torus>
 
-    <!-- 💍 Ring ABOVE -->
-    <a-torus
-      position="0 1.5 0"
-      radius="0.25"
-      radius-tubular="0.04"
-      color="gold"
-      animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-    </a-torus>
+      <a-entity position="0 1 0" rotation="-90 0 0">
+        <a-plane width="3.2" height="1.2" color="#000" opacity="0.6"></a-plane>
+        
+        <a-text id="nameText" value="Dear Guest ✨" align="center" color="#FFFFFF" 
+                width="5" position="0 0.25 0.1"></a-text>
+        
+        <a-text id="inviteMsg" value="Join us on our big day! ❤️" 
+                align="center" color="#FFB6C1" width="3" position="0 -0.2 0.1"></a-text>
+      </a-entity>
+    </a-marker>
 
-    <!-- 💖 TEXT BELOW -->
-    <a-entity position="0 0.2 0" rotation="-90 0 0">
-      <a-plane width="3.2" height="1.2" color="#000" opacity="0.7"></a-plane>
+    <a-entity camera="fov: 80"></a-entity>
+  </a-scene>
 
-      <a-text id="nameText"
-              value="Dear Guest ✨"
-              align="center"
-              color="white"
-              width="5"
-              position="0 0.3 0.1">
-      </a-text>
+  <script>
+    // Personalize using URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    let guestName = urlParams.get("name") || "Friend";
+    guestName = guestName.charAt(0).toUpperCase() + guestName.slice(1);
 
-      <a-text value="Join us on our big day ❤️"
-              align="center"
-              color="pink"
-              width="3"
-              position="0 -0.2 0.1">
-      </a-text>
-    </a-entity>
+    window.addEventListener('load', () => {
+      const nameEl = document.querySelector("#nameText");
+      const msgEl = document.querySelector("#inviteMsg");
 
-  </a-marker>
-
-  <a-entity camera></a-entity>
-
-</a-scene>
-
-<script>
-  const startBtn = document.getElementById("startBtn");
-  const menu = document.getElementById("menu");
-
-  startBtn.addEventListener("click", () => {
-    startBtn.style.display = "none";
-    menu.style.display = "block";
-
-    const scene = document.querySelector("a-scene");
-    scene.style.display = "block";
-  });
-
-  // Name personalization
-  const params = new URLSearchParams(window.location.search);
-  let name = params.get("name") || "Friend";
-  name = name.charAt(0).toUpperCase() + name.slice(1);
-
-  setTimeout(() => {
-    document.getElementById("nameText")
-      .setAttribute("value", `Dear ${name} 💖`);
-  }, 1000);
-</script>
+      if (nameEl) nameEl.setAttribute("value", `Dear ${guestName} ✨`);
+      
+      // Personal touch for your name
+      if (guestName.toLowerCase() === "prarthana") {
+          msgEl.setAttribute("value", "Welcome Prarthana!\nWitness our new beginning 💍");
+      }
+    });
+  </script>
 
 </body>
 </html>
