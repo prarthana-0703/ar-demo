@@ -119,41 +119,41 @@
       <a-entity petal-rain></a-entity>
 
       <!-- 💍 RING (TOP NOW) -->
-      <a-torus position="0 1.8 0"
-               radius="0.3"
-               radius-tubular="0.05"
-               color="#FFD700"
-               animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"
-               animation__float="property: position; to: 0 2 0; dir: alternate; dur: 2000; loop: true">
-      </a-torus>
+    <!-- 💍 RING (TOP FRONT) -->
+<a-torus position="0 1.5 0.5"
+         radius="0.3"
+         radius-tubular="0.05"
+         color="#FFD700"
+         animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"
+         animation__float="property: position; to: 0 1.7 0.5; dir: alternate; dur: 2000; loop: true">
+</a-torus>
 
-      <!-- 💖 TEXT BELOW -->
-      <a-entity position="0 0.5 0" rotation="-90 0 0">
+<!-- 💖 TEXT BELOW (VERTICAL NOW) -->
+<a-entity position="0 0.3 0.5">
 
-        <a-plane position="0 0 -0.1"
-                 width="3.2"
-                 height="1.2"
-                 color="#000"
-                 opacity="0.6">
-        </a-plane>
+  <a-plane width="3.2"
+           height="1.2"
+           color="#000"
+           opacity="0.6">
+  </a-plane>
 
-        <a-text id="nameText"
-                value="Dear Guest ✨"
-                align="center"
-                color="#FFFFFF"
-                width="5"
-                position="0 0.3 0.1">
-        </a-text>
+  <a-text id="nameText"
+          value="Dear Friend ✨"
+          align="center"
+          color="#FFFFFF"
+          width="5"
+          position="0 0.3 0.1">
+  </a-text>
 
-        <a-text id="inviteMsg"
-                value="Join us on our big day! ❤️"
-                align="center"
-                color="#FFB6C1"
-                width="3"
-                position="0 -0.2 0.1">
-        </a-text>
+  <a-text id="inviteMsg"
+          value="Join us on our big day! ❤️"
+          align="center"
+          color="#FFB6C1"
+          width="3"
+          position="0 -0.2 0.1">
+  </a-text>
 
-      </a-entity>
+</a-entity>
 
     </a-marker>
 
