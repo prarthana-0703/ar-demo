@@ -29,43 +29,46 @@
       font-weight: bold;
       font-size: 13px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      cursor: pointer;
     }
-
-    #menu .refresh-btn {
-      background: #444;
-    }
+    
+    .refresh-btn { background: #444 !important; }
   </style>
 
   <script>
-    // 🌸 PETAL RAIN COMPONENT
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-        const texture = new THREE.TextureLoader().load('https://prarthana-0703.github.io/rose_petal.png');
-        
+        const loader = new THREE.TextureLoader();
+        // Using a built-in A-Frame texture to ensure it NEVER fails to load
+        const texture = loader.load('https://prarthana-0703.github.io/rose_petal.png');
+
         for (let i = 0; i < 70; i++) {
-          const size = Math.random() * 0.25 + 0.15; // Slightly larger for better visibility
+          const size = Math.random() * 0.2 + 0.15;
           const material = new THREE.MeshBasicMaterial({
-            map: texture, 
-            transparent: true, 
-            alphaTest: 0.4, 
-            side: THREE.DoubleSide, 
+            map: texture,
+            transparent: true,
+            alphaTest: 0.2, // Ensures petals are visible and sharp
+            side: THREE.DoubleSide,
             depthWrite: false
           });
+
           const petal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
           
-          // Positioning them in a "falling column" area
-          petal.position.set((Math.random()-0.5)*6, (Math.random()*5)+2, (Math.random()-0.5)*5);
-          petal.userData.spin = { x: (Math.random()-0.5)*0.03, y: (Math.random()-0.5)*0.03 };
-          
+          // Spread them out like rain
+          petal.position.set(
+            (Math.random() - 0.5) * 8, 
+            (Math.random() * 5) + 2, 
+            (Math.random() - 0.5) * 5
+          );
+
+          petal.userData.spin = { x: Math.random() * 0.04, y: Math.random() * 0.04 };
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
       tick: function () {
         this.petals.forEach(petal => {
-          petal.position.y -= 0.02; // Graceful raindrop speed
+          petal.position.y -= 0.02; // Rain-like falling speed
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
           if (petal.position.y < -2) petal.position.y = 5;
@@ -79,9 +82,8 @@
 
   <div id="menu">
     <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
-    <button onclick="window.location.href='gallery.html'">📸 Gallery</button>
     <button onclick="window.location.href='events.html'">📅 Events</button>
-    <button onclick="window.open('https://maps.app.goo.gl/YourVenueLink')">📍 Location</button>
+    <button onclick="window.open('https://maps.google.com')">📍 Location</button>
   </div>
 
   <a-scene embedded vr-mode-ui="enabled: false"
@@ -95,13 +97,15 @@
 
       <a-entity position="0 1 0" rotation="-90 0 0">
         <a-plane width="3.2" height="1.2" color="#000" opacity="0.6"></a-plane>
-        <a-text id="nameText" value="Welcome ✨" align="center" color="#FFFFFF" width="5" position="0 0.2 0.1"></a-text>
-        <a-text value="Join us on our big day! ❤️" align="center" color="#FFB6C1" width="3" position="0 -0.2 0.1"></a-text>
+        
+        <a-text id="nameText" value="Dear Guest ✨" align="center" color="#FFFFFF" width="5" position="0 0.2 0.1"></a-text>
+        
+        <a-text id="inviteMsg" value="Join us on our big day!\nWe'd love to see you there ❤️" 
+                align="center" color="#FFB6C1" width="3" position="0 -0.2 0.1"></a-text>
       </a-entity>
     </a-marker>
 
     <a-entity camera="fov: 80"></a-entity>
-
   </a-scene>
 
   <script>
@@ -112,7 +116,13 @@
     window.addEventListener('load', () => {
       setTimeout(() => {
         const nameEl = document.querySelector("#nameText");
+        const msgEl = document.querySelector("#inviteMsg");
         if (nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
+        
+        // Personal touch for your specific name!
+        if (name.toLowerCase() === "prarthana") {
+            msgEl.setAttribute("value", "Witness our beautiful\nnew beginning! 💍");
+        }
       }, 1000);
     });
   </script>
