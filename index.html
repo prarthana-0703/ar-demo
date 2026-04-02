@@ -3,7 +3,8 @@
 <head>
   <title>AR Wedding Invitation</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <!-- MOBILE VIEW -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <!-- AFRAME + ARJS -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -19,8 +20,8 @@
       background: black;
     }
 
-    /* 🔥 FORCE FULL CAMERA */
-    video {
+    /* 🔥 FULLSCREEN CAMERA FIX (VERY IMPORTANT) */
+    video, #arjs-video {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
@@ -36,50 +37,55 @@
       left: 0;
     }
 
-    /* BUTTONS */
+    /* UI BUTTONS */
     #menu {
       position: fixed;
       bottom: 20px;
       width: 100%;
       text-align: center;
-      z-index: 10;
+      z-index: 1000;
     }
 
     #menu button {
-      padding: 10px 18px;
-      border-radius: 20px;
+      margin: 5px;
+      padding: 12px 20px;
+      border-radius: 25px;
       border: none;
       background: #ff477e;
       color: white;
       font-weight: bold;
+      font-size: 14px;
     }
   </style>
 
-  <!-- 🌸 PETALS -->
+  <!-- 🌸 PETAL SYSTEM -->
   <script>
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
         const texture = new THREE.TextureLoader().load('rose_petal.png');
 
-        for (let i = 0; i < 40; i++) {
-          const mat = new THREE.MeshBasicMaterial({
+        for (let i = 0; i < 60; i++) {
+          const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
             alphaTest: 0.3,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false
           });
 
-          const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, 0.2),
-            mat
-          );
+          const petal = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.25), material);
 
           petal.position.set(
-            (Math.random() - 0.5) * 4,
-            Math.random() * 3,
-            Math.random()
+            (Math.random() - 0.5) * 5,
+            (Math.random() * 4) + 1,
+            Math.random() * 2
           );
+
+          petal.userData.spin = {
+            x: Math.random() * 0.03,
+            y: Math.random() * 0.03
+          };
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
@@ -88,8 +94,13 @@
 
       tick: function () {
         this.petals.forEach(p => {
-          p.position.y -= 0.015;
-          if (p.position.y < -1) p.position.y = 3;
+          p.position.y -= 0.02;
+          p.rotation.x += p.userData.spin.x;
+          p.rotation.y += p.userData.spin.y;
+
+          if (p.position.y < -1.5) {
+            p.position.y = 4;
+          }
         });
       }
     });
@@ -98,73 +109,95 @@
 
 <body>
 
-<div id="menu">
-  <button onclick="location.reload()">Refresh</button>
-</div>
+  <!-- UI MENU -->
+  <div id="menu">
+    <button onclick="location.reload()">🔄 Refresh</button>
+    <button onclick="window.location.href='events.html'">📅 Events</button>
+    <button onclick="window.open('https://maps.google.com')">📍 Location</button>
+  </div>
 
-<a-scene
-  embedded
-  vr-mode-ui="enabled: false"
-  renderer="precision: mediump"
-  arjs="sourceType: webcam; debugUIEnabled: false;">
+  <!-- AR SCENE -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true;"
+    arjs="
+      sourceType: webcam;
+      debugUIEnabled: false;
+      displayWidth: 100vw;
+      displayHeight: 100vh;
+    ">
 
-  <a-assets>
-    <a-asset-item id="model" src="model-v1.glb"></a-asset-item>
-  </a-assets>
+    <a-assets>
+      <!-- YOUR MODEL -->
+      <a-asset-item id="coupleModel" src="model-v1.glb"></a-asset-item>
+    </a-assets>
 
-  <a-marker preset="hiro">
+    <a-marker preset="hiro">
 
-    <!-- 🌸 PETALS -->
-    <a-entity petal-rain></a-entity>
+      <!-- 🌸 PETALS -->
+      <a-entity petal-rain></a-entity>
 
-    <!-- 💍 MODEL (FIXED POSITION + SCALE) -->
-    <a-entity
-      gltf-model="#model"
-      position="0 0 0"
-      scale="0.2 0.2 0.2"
-      rotation="0 0 0">
-    </a-entity>
+      <!-- 💍 3D MODEL -->
+      <a-entity 
+        gltf-model="#coupleModel"
+        position="0 0.8 0"
+        scale="0.5 0.5 0.5"
+        rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000">
+      </a-entity>
 
-    <!-- 📝 TEXT -->
-    <a-entity position="0 0.8 0" rotation="-90 0 0">
+      <!-- 📝 TEXT -->
+      <a-entity position="0 -0.3 0" rotation="-90 0 0">
 
-      <a-plane width="3" height="1.2" color="black" opacity="0.6"></a-plane>
+        <a-plane width="3.5" height="1.4" color="#000" opacity="0.7"></a-plane>
 
-      <a-text
-        value="Dear Friend ✨"
-        align="center"
-        color="white"
-        width="4"
-        position="0 0.3 0.1">
-      </a-text>
+        <a-text id="nameText"
+                value="Dear Guest ✨"
+                align="center"
+                color="#FFFFFF"
+                width="5"
+                position="0 0.3 0.1">
+        </a-text>
 
-      <a-text
-        value="Join us on our big day ❤️"
-        align="center"
-        color="#FFB6C1"
-        width="3"
-        position="0 -0.2 0.1">
-      </a-text>
+        <a-text id="inviteMsg"
+                value="Join us as we celebrate our love! ❤️"
+                align="center"
+                color="#FFB6C1"
+                width="3.2"
+                position="0 -0.2 0.1">
+        </a-text>
 
-    </a-entity>
+      </a-entity>
 
-  </a-marker>
+    </a-marker>
 
-  <a-entity camera></a-entity>
+    <a-entity camera="fov: 80"></a-entity>
+  </a-scene>
 
-</a-scene>
+  <!-- 👤 NAME PERSONALIZATION -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let name = params.get("name") || "Friend";
+    name = name.charAt(0).toUpperCase() + name.slice(1);
 
-<script>
-/* 🔥 SAMSUNG FIX */
-setTimeout(() => {
-  const video = document.querySelector("video");
-  if (video) {
-    video.style.width = "100vw";
-    video.style.height = "100vh";
-    video.style.objectFit = "cover";
-  }
-}, 1000);
-</script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelector("#nameText")
+          .setAttribute("value", `Dear ${name} ✨`);
+      }, 1000);
+    });
+
+    /* 🔥 Samsung FIX */
+    setTimeout(() => {
+      const video = document.querySelector("video");
+      if (video) {
+        video.style.width = "100vw";
+        video.style.height = "100vh";
+        video.style.objectFit = "cover";
+      }
+    }, 1500);
+  </script>
 
 </body>
 </html>
