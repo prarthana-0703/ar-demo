@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AR Wedding Invitation</title>
+<title>AR Wedding Invite</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ✅ REQUIRED LIBRARIES -->
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
+<!-- ✅ STABLE A-Frame -->
+<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+
+<!-- ✅ STABLE AR.js -->
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
 <style>
 body { margin: 0; overflow: hidden; }
@@ -17,72 +19,27 @@ body { margin: 0; overflow: hidden; }
 
 <body>
 
-<a-scene
-embedded
-renderer="antialias: true; precision: mediump;"
-vr-mode-ui="enabled:false"
-arjs="sourceType: webcam; facingMode: environment; debugUIEnabled:false;">
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
 
-<a-assets>
-<img id="photo1" src="Screenshot 2026-03-12 001948.png">
-<img id="photo2" src="Screenshot 2026-03-12 003337.png">
-<img id="photo3" src="Illustration of South Indian Wedding Couple.jpg">
-<img id="photo4" src="couple4.jpg">
-</a-assets>
-
-<a-marker
-preset="hiro"
-smooth="true"
-smoothCount="10"
-smoothTolerance="0.01"
-smoothThreshold="5">
+<a-marker preset="hiro">
 
 <!-- 💖 NAME -->
-<a-text
-id="nameText"
-value="Loading..."
-position="0 0.7 -1.2"
-align="center"
-color="#FFD700"
-rotation="-90 0 0"
-scale="1.4 1.4 1.4">
+<a-text id="nameText"
+        value="Loading..."
+        position="0 0.6 0"
+        align="center"
+        color="yellow"
+        scale="1.5 1.5 1.5">
 </a-text>
 
 <!-- 💌 MESSAGE -->
-<a-text
-id="msgText"
-value=""
-position="0 0.3 -1.2"
-align="center"
-color="pink"
-rotation="-90 0 0"
-scale="1.2 1.2 1.2">
+<a-text id="msgText"
+        value=""
+        position="0 0.2 0"
+        align="center"
+        color="pink"
+        scale="1.2 1.2 1.2">
 </a-text>
-
-<!-- 🎞️ GALLERY -->
-<a-entity
-position="0 0.1 0"
-animation="property: position;
-           from: 1.2 0.1 0;
-           to: -1.2 0.1 0;
-           dur: 8000;
-           dir: alternate;
-           loop: true;
-           easing: linear">
-
-<!-- IMAGE 1 -->
-<a-image src="#photo1" rotation="-90 0 0"
-         position="-1.2 0 0" width="1.2" height="1.5"></a-image>
-
-<!-- IMAGE 2 -->
-<a-image src="#photo2" rotation="-90 0 0"
-         position="0 0 0" width="1.2" height="1.5"></a-image>
-
-<!-- IMAGE 3 -->
-<a-image src="#photo3" rotation="-90 0 0"
-         position="1.2 0 0" width="1.2" height="1.5"></a-image>
-
-</a-entity>
 
 </a-marker>
 
@@ -90,14 +47,12 @@ animation="property: position;
 
 </a-scene>
 
-<!-- ✅ SCRIPT -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
     const params = new URLSearchParams(window.location.search);
     let name = params.get("name") || "Guest";
 
-    // Capitalize
     name = name.charAt(0).toUpperCase() + name.slice(1);
 
     const messages = [
