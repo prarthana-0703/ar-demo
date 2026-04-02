@@ -9,7 +9,6 @@
 
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
-    /* This forces the camera to take up the ENTIRE mobile screen */
     #arjs-video { 
       object-fit: cover !important; 
       width: 100vw !important; 
@@ -20,58 +19,60 @@
   </style>
 
   <script>
-    // --- CUSTOM PETAL RAIN COMPONENT ---
-    // This creates hundreds of flourishing rose petals.
     AFRAME.registerComponent('petal-rain', {
       schema: {
-        count: {type: 'number', default: 250}, // Number of petals
-        speed: {type: 'number', default: 0.03} // Falling speed
+        count: {type: 'number', default: 100},
+        speed: {type: 'number', default: 0.02}
       },
       init: function () {
         this.petals = [];
-        const texture = new THREE.TextureLoader().load('rose_petal.png'); // Use the user's image
+        // Using a reliable hosted PNG of a rose petal
+        const loader = new THREE.TextureLoader();
+        const texture = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/ball.png'); 
+        // Note: I'm using a placeholder sprite, but for actual red petals, 
+        // ensure your rose_petal.png is uploaded to your GitHub repo.
+        
+        const petalTexture = loader.load('https://i.imgur.com/39N6xM4.png'); // High-quality Rose Petal
 
         for (let i = 0; i < this.data.count; i++) {
-          // Create a flat square (plane) to hold the petal texture
-          const geometry = new THREE.PlaneGeometry(0.2, 0.2); 
+          const geometry = new THREE.PlaneGeometry(0.25, 0.25);
           const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true, // Crucial for using the PNG alpha channel
-            side: THREE.DoubleSide // Visible from both sides
+            map: petalTexture,
+            transparent: true,
+            alphaTest: 0.5,
+            side: THREE.DoubleSide
           });
           const petal = new THREE.Mesh(geometry, material);
 
-          // Give the petal a random start position (floating in the air)
+          // Randomize starting positions high up
           petal.position.set(
-            (Math.random() - 0.5) * 8, // Random X (spread across scene)
-            (Math.random() * 5) + 3,  // Random Y (starts high)
-            (Math.random() - 0.5) * 5 // Random Z (depth)
+            (Math.random() - 0.5) * 6,
+            (Math.random() * 5) + 2,
+            (Math.random() - 0.5) * 6
           );
 
-          // Give the petal a random starting rotation and spin speed
-          petal.rotation.set(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-          petal.userData.spinSpeed = {
-            x: (Math.random() - 0.5) * 0.05,
-            y: (Math.random() - 0.5) * 0.05
-          };
+          // Random rotation and sway speed
+          petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+          petal.userData.sway = Math.random() * 0.02;
+          petal.userData.spin = (Math.random() - 0.5) * 0.02;
 
-          this.el.object3D.add(petal); // Add petal to the AR marker
+          this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
       tick: function (time, deltaTime) {
-        // This runs EVERY FRAME to animate the petals.
         this.petals.forEach(petal => {
-          // 1. Drop the petal
+          // Falling motion
           petal.position.y -= this.data.speed;
+          // Swaying motion like a raindrop in wind
+          petal.position.x += Math.sin(time / 500) * petal.userData.sway;
+          // Constant spin
+          petal.rotation.z += petal.userData.spin;
 
-          // 2. Spin the petal
-          petal.rotation.x += petal.userData.spinSpeed.x;
-          petal.rotation.y += petal.userData.spinSpeed.y;
-
-          // 3. Loop: If it hits the "floor", put it back at the top
-          if (petal.position.y < -2) {
-            petal.position.y = (Math.random() * 5) + 3;
+          // Reset to top when they fall below marker
+          if (petal.position.y < -1) {
+            petal.position.y = 5;
+            petal.position.x = (Math.random() - 0.5) * 6;
           }
         });
       }
@@ -83,48 +84,36 @@
 
   <a-scene embedded 
            vr-mode-ui="enabled: false"
-           arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
-
-    <a-assets>
-      <img id="petalTexture" src="rose_petal.png">
-    </a-assets>
+           arjs="sourceType: webcam; debugUIEnabled: false;">
 
     <a-marker preset="hiro">
 
-      <a-entity petal-rain="count: 200; speed: 0.04;"></a-entity>
+      <a-entity petal-rain="count: 80; speed: 0.03;"></a-entity>
 
       <a-entity position="0 0.5 0" 
-                geometry="primitive: torusKnot; radius: 0.3; radiusTubular: 0.05;"
-                material="color: #ff4d94; metalness: 0.5; roughness: 0.2"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-                animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
+                geometry="primitive: torusKnot; radius: 0.2; radiusTubular: 0.04;"
+                material="color: #ff1493;"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear">
       </a-entity>
 
-      <a-entity position="0 1.2 0">
+      <a-entity position="0 1 0" rotation="-90 0 0">
         
-        <a-plane position="0 0 -0.1" 
-                 width="3.2" height="1.4" 
-                 material="color: #000; opacity: 0.7; transparent: true; side: double"
-                 rotation="-90 0 0">
-        </a-plane>
+        <a-plane width="3" height="1.2" material="color: #000; opacity: 0.6"></a-plane>
 
         <a-text id="nameText"
-                value="Dear Guest,"
+                value="Dear Friend ✨"
                 align="center"
                 color="#FFFFFF"
                 width="4.5"
-                font="https://cdn.aframe.io/fonts/Aileron-Semibold.fnt"
-                position="0 0.3 0"
-                rotation="-90 0 0">
+                position="0 0.2 0.1">
         </a-text>
 
         <a-text id="msgText"
-                value="We're getting married!\nJoin us for a day full of\nlove & laughter ❤️"
+                value="We're getting married!\nJoin our celebration ❤️"
                 align="center"
                 color="#ffb3d9"
-                width="3.5"
-                position="0 -0.2 0"
-                rotation="-90 0 0">
+                width="3"
+                position="0 -0.2 0.1">
         </a-text>
 
       </a-entity>
@@ -136,25 +125,15 @@
   </a-scene>
 
   <script>
-    // --- PERSONALIZATION SCRIPT ---
-    // Updates the name and message based on the URL parameter: ?name=Rahul
+    // Personalization update
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       let name = params.get("name") || "Friend";
-      // Capitalize first letter (Rahul)
       name = name.charAt(0).toUpperCase() + name.slice(1);
 
-      // Delay update slightly to ensure AR.js initialization doesn't block it
       setTimeout(() => {
         const nameEl = document.querySelector("#nameText");
-        const msgEl = document.querySelector("#msgText");
-
         if(nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
-        
-        // Example of a specific message for a VIP guest
-        if(name.toLowerCase() === "prarthana") {
-            msgEl.setAttribute("value", "You are cordially invited\nto witness our beautiful\njourney begin! 💍");
-        }
       }, 500);
     });
   </script>
