@@ -9,8 +9,14 @@
 
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
-    /* Fix for the camera zoom/stretch issue */
-    #arjs-video { object-fit: cover !important; width: 100vw !important; height: 100vh !important; }
+    /* This forces the camera to take up the ENTIRE mobile screen */
+    #arjs-video { 
+      object-fit: cover !important; 
+      width: 100vw !important; 
+      height: 100vh !important; 
+      position: fixed !important;
+      top: 0; left: 0;
+    }
   </style>
 </head>
 
@@ -18,40 +24,41 @@
 
   <a-scene embedded 
            vr-mode-ui="enabled: false"
-           arjs="sourceType: webcam; debugUIEnabled: false; fitSelected: true;">
+           arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
 
     <a-marker preset="hiro">
 
-      <a-box position="0 0.3 0"
-             scale="0.4 0.4 0.4"
-             material="color: #FF1493"
-             animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
-      </a-box>
+      <a-entity position="0 0.5 0" 
+                geometry="primitive: torusKnot; radius: 0.3; radiusTubular: 0.05;"
+                material="color: #ff4d94; metalness: 0.5; roughness: 0.2"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+                animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
+      </a-entity>
 
-      <a-entity position="0 1 0" 
-                animation="property: position; to: 0 1.1 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+      <a-entity position="0 1.2 0">
         
-        <a-plane position="0 0 0" 
-                 rotation="-90 0 0" 
-                 width="2.8" height="1" 
-                 material="color: #000; opacity: 0.6">
+        <a-plane position="0 0 -0.1" 
+                 width="3.2" height="1.4" 
+                 material="color: #000; opacity: 0.7; transparent: true; side: double"
+                 rotation="-90 0 0">
         </a-plane>
 
         <a-text id="nameText"
-                value="Loading..."
+                value="Dear Guest,"
                 align="center"
                 color="#FFFFFF"
-                width="4"
-                position="0 0.2 0.1"
+                width="4.5"
+                font="https://cdn.aframe.io/fonts/Aileron-Semibold.fnt"
+                position="0 0.3 0"
                 rotation="-90 0 0">
         </a-text>
 
         <a-text id="msgText"
-                value=""
+                value="We're getting married!\nJoin us for a day full of\nlove & laughter ❤️"
                 align="center"
-                color="#FF69B4"
-                width="3"
-                position="0 -0.2 0.1"
+                color="#ffb3d9"
+                width="3.5"
+                position="0 -0.2 0"
                 rotation="-90 0 0">
         </a-text>
 
@@ -64,24 +71,23 @@
   </a-scene>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
-      let name = params.get("name") || "Guest";
+      let name = params.get("name") || "Friend";
       name = name.charAt(0).toUpperCase() + name.slice(1);
 
-      const messages = [
-        "Please join us on our special day! 💍",
-        "We're getting married! ❤️",
-        "Celebrate this journey with us ✨"
-      ];
+      // We use a small timeout to make sure AR.js is ready to swap the text
+      setTimeout(() => {
+        const nameEl = document.querySelector("#nameText");
+        const msgEl = document.querySelector("#msgText");
 
-      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      const scene = document.querySelector("a-scene");
-
-      scene.addEventListener("loaded", () => {
-        document.querySelector("#nameText").setAttribute("value", `Welcome ${name} 💖`);
-        document.querySelector("#msgText").setAttribute("value", randomMsg);
-      });
+        if(nameEl) nameEl.setAttribute("value", `Welcome ${name} ✨`);
+        
+        // Optional: Different messages for different people
+        if(name.toLowerCase() === "prarthana") {
+            msgEl.setAttribute("value", "You are cordially invited\nto witness our beautiful\njourney begin! 💍");
+        }
+      }, 500);
     });
   </script>
 
