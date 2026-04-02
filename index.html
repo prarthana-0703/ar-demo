@@ -2,40 +2,74 @@
 <html>
 <head>
   <title>AR Wedding Invitation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; background: #000; position: fixed; width: 100%; height: 100%; }
-    /* 🛑 FORCE FULL SCREEN CAMERA */
-    #arjs-video {
-      object-fit: cover !important;
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+      height: 100%;
+      width: 100%;
+    }
+
+    canvas, .a-canvas {
+      position: fixed !important;
+      top: 0;
+      left: 0;
       width: 100vw !important;
       height: 100vh !important;
+    }
+
+    video {
       position: fixed !important;
-      top: 0; left: 0;
-      z-index: -1;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+    }
+
+    /* Buttons UI */
+    #menu {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 999;
+    }
+
+    #menu button {
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: none;
+      background: #ff477e;
+      color: white;
+      font-size: 14px;
     }
   </style>
 
   <script>
+    // 🌸 PETAL SYSTEM
     AFRAME.registerComponent('petal-rain', {
-      schema: {
-        count: {type: 'number', default: 100},
-        speed: {type: 'number', default: 0.02}
-      },
+      schema: { count: {default: 80}, speed: {default: 0.02} },
+
       init: function () {
         this.petals = [];
 
-        // ✅ THE PRO FIX: Using the preloaded asset correctly
         const imgEl = document.querySelector('#petalImg');
         const texture = new THREE.Texture(imgEl);
         texture.needsUpdate = true;
 
         for (let i = 0; i < this.data.count; i++) {
-          const size = Math.random() * 0.2 + 0.15;
+
+          const size = Math.random() * 0.2 + 0.1;
           const geometry = new THREE.PlaneGeometry(size, size);
 
           const material = new THREE.MeshBasicMaterial({
@@ -49,36 +83,29 @@
           const petal = new THREE.Mesh(geometry, material);
 
           petal.position.set(
-            (Math.random() - 0.5) * 8,
-            (Math.random() * 5) + 2,
-            (Math.random() - 0.5) * 5
+            (Math.random() - 0.5) * 6,
+            (Math.random() * 4) + 2,
+            (Math.random() - 0.5) * 4
           );
 
           petal.userData.spin = {
-            x: (Math.random() - 0.5) * 0.04,
-            y: (Math.random() - 0.5) * 0.04
+            x: (Math.random() - 0.5) * 0.03,
+            y: (Math.random() - 0.5) * 0.03
           };
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
-      tick: function (time, deltaTime) {
-        this.petals.forEach(petal => {
-          // Falling
-          petal.position.y -= this.data.speed;
-          
-          // ✨ OPTIONAL UPGRADE: Wind sway
-          petal.position.x += Math.sin(time * 0.001) * 0.005;
 
-          // Rotation
+      tick: function () {
+        this.petals.forEach(petal => {
+          petal.position.y -= this.data.speed;
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
 
-          // Reset when fallen
           if (petal.position.y < -2) {
             petal.position.y = Math.random() * 4 + 2;
-            petal.position.x = (Math.random() - 0.5) * 8;
           }
         });
       }
@@ -88,49 +115,97 @@
 
 <body>
 
-  <a-scene embedded vr-mode-ui="enabled:false"
-           arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
+<a-scene
+embedded
+vr-mode-ui="enabled:false"
+renderer="antialias: true; logarithmicDepthBuffer: true;"
+arjs="sourceType: webcam; facingMode: environment; debugUIEnabled: false;">
 
-    <a-assets>
-      <img id="petalImg" src="rose_petal.png">
-    </a-assets>
+  <a-assets>
+    <img id="petalImg" src="rose_petal.png">
+  </a-assets>
 
-    <a-marker preset="hiro">
+  <a-marker preset="hiro">
 
-      <a-entity petal-rain></a-entity>
+    <!-- 🌸 PETALS -->
+    <a-entity petal-rain></a-entity>
 
-      <a-entity position="0 0.4 0" 
-                geometry="primitive: torusKnot; radius: 0.25; radiusTubular: 0.05;"
-                material="color: #FF1493; metalness: 0.5; roughness: 0.2"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-                animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
-      </a-entity>
+    <!-- 💍 CENTER MODEL -->
+    <a-torus-knot position="0 0.3 0"
+                  radius="0.25"
+                  radius-tubular="0.05"
+                  color="#FF1493"
+                  animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+    </a-torus-knot>
 
-      <a-entity position="0 1.2 0" rotation="-90 0 0">
-        <a-plane width="3.4" height="1.4" material="color: #000; opacity: 0.7"></a-plane>
-        <a-text id="nameText" value="Dear Friend ✨" align="center" color="#FFFFFF" width="5" position="0 0.3 0.1"></a-text>
-        <a-text id="msgText" value="Join us on our big day! ❤️" align="center" color="#FFB6C1" width="3.5" position="0 -0.2 0.1"></a-text>
-      </a-entity>
+    <!-- 💖 TEXT -->
+    <a-entity position="0 1.2 0" rotation="-90 0 0">
+      <a-plane width="3.2" height="1.3" color="#000" opacity="0.6"></a-plane>
 
-    </a-marker>
+      <a-text id="nameText"
+              value="Dear Friend ✨"
+              align="center"
+              color="#FFFFFF"
+              width="5"
+              position="0 0.3 0.1">
+      </a-text>
 
-    <a-entity camera="fov: 80"></a-entity>
+      <a-text id="msgText"
+              value="Join us on our big day! ❤️"
+              align="center"
+              color="#FFB6C1"
+              width="3.5"
+              position="0 -0.2 0.1">
+      </a-text>
+    </a-entity>
 
-  </a-scene>
+  </a-marker>
 
-  <script>
-    // Personalization logic
-    const params = new URLSearchParams(window.location.search);
-    let name = params.get("name") || "Friend";
-    name = name.charAt(0).toUpperCase() + name.slice(1);
+  <a-entity camera="fov: 100"></a-entity>
 
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const nameEl = document.querySelector("#nameText");
-        if (nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
-      }, 1000);
-    });
-  </script>
+</a-scene>
+
+<!-- 📱 BUTTON MENU -->
+<div id="menu">
+  <button onclick="openGallery()">📸 Gallery</button>
+  <button onclick="openEvents()">📅 Events</button>
+  <button onclick="openMap()">📍 Location</button>
+</div>
+
+<script>
+  // Name personalization
+  const params = new URLSearchParams(window.location.search);
+  let name = params.get("name") || "Friend";
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.querySelector("#nameText")
+        .setAttribute("value", `Dear ${name} ✨`);
+    }, 500);
+  });
+
+  // Navigation buttons
+  function openGallery() {
+    window.location.href = "gallery.html";
+  }
+
+  function openEvents() {
+    window.location.href = "events.html";
+  }
+
+  function openMap() {
+    window.open("https://maps.google.com/?q=YOUR_LOCATION");
+  }
+
+  // Resize fix
+  window.addEventListener("resize", () => {
+    const scene = document.querySelector("a-scene");
+    if (scene && scene.renderer) {
+      scene.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  });
+</script>
 
 </body>
 </html>
