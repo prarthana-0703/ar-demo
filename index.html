@@ -20,11 +20,12 @@ body { margin: 0; overflow: hidden; }
 <a-scene
 embedded
 vr-mode-ui="enabled: false"
-renderer="logarithmicDepthBuffer: true;"
+renderer="antialias: true;"
 arjs="sourceType: webcam;
+      facingMode: environment;
       debugUIEnabled: false;
-      sourceWidth: 1280;
-      sourceHeight: 720;
+      sourceWidth: 640;
+      sourceHeight: 480;
       displayWidth: 100%;
       displayHeight: 100%;">
 
@@ -50,8 +51,8 @@ arjs="sourceType: webcam;
 
 </a-marker>
 
-<!-- ✅ CAMERA WITH ZOOM FIX -->
-<a-entity camera="fov: 80"></a-entity>
+<!-- ✅ CAMERA FIX (LESS ZOOM) -->
+<a-entity camera="fov: 100"></a-entity>
 
 </a-scene>
 
