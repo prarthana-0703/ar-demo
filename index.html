@@ -2,37 +2,39 @@
 <html>
 <head>
   <title>AR Wedding Invitation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
-    /* This forces the camera to fill the entire mobile screen */
     #arjs-video {
       object-fit: cover !important;
       width: 100vw !important;
       height: 100vh !important;
-      position: fixed !important;
-      top: 0; left: 0;
     }
   </style>
 
   <script>
+    // 🌸 PETAL RAIN COMPONENT (FIXED TEXTURE)
     AFRAME.registerComponent('petal-rain', {
       schema: {
-        count: {type: 'number', default: 60},
+        count: {type: 'number', default: 80}, // optimized
         speed: {type: 'number', default: 0.02}
       },
+
       init: function () {
         this.petals = [];
-        // ✅ FIXED PATH: Using your GitHub username to ensure the image loads correctly
-        const texture = new THREE.TextureLoader().load('https://prarthana-0703.github.io/rose_petal.png');
+
+        const texture = new THREE.TextureLoader().load('./rose_petal.png');
 
         for (let i = 0; i < this.data.count; i++) {
+
           const size = Math.random() * 0.2 + 0.1;
           const geometry = new THREE.PlaneGeometry(size, size);
+
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
@@ -42,29 +44,47 @@
           });
 
           const petal = new THREE.Mesh(geometry, material);
+
+          // random position
           petal.position.set(
             (Math.random() - 0.5) * 6,
             (Math.random() * 4) + 2,
             (Math.random() - 0.5) * 4
           );
 
+          // random rotation
+          petal.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+          );
+
+          // spin speed
           petal.userData.spin = {
-            x: (Math.random() - 0.5) * 0.03,
-            y: (Math.random() - 0.5) * 0.03
+            x: (Math.random() - 0.5) * 0.02,
+            y: (Math.random() - 0.5) * 0.02
           };
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
+
       tick: function () {
         this.petals.forEach(petal => {
+
+          // falling
           petal.position.y -= this.data.speed;
+
+          // rotation
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
+
+          // reset when below
           if (petal.position.y < -2) {
             petal.position.y = Math.random() * 4 + 2;
           }
+
         });
       }
     });
@@ -74,67 +94,76 @@
 <body>
 
 <a-scene embedded vr-mode-ui="enabled:false"
-         arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
+         arjs="sourceType: webcam; debugUIEnabled: false;">
 
 <a-marker preset="hiro">
 
-  <a-entity petal-rain></a-entity>
+<!-- 🌸 PETAL EFFECT -->
+<a-entity petal-rain></a-entity>
 
-  <a-entity position="0 0.5 0" 
-            geometry="primitive: torusKnot; radius: 0.25; radiusTubular: 0.05;"
-            material="color: #FF1493; metalness: 0.5; roughness: 0.2"
-            animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-            animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
-  </a-entity>
+<!-- 💍 CENTER MODEL -->
+<a-box position="0 0.3 0"
+       scale="0.4 0.4 0.4"
+       material="color: #FF1493"
+       animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+</a-box>
 
-  <a-entity position="0 1.2 0" rotation="-90 0 0">
-    <a-plane width="3" height="1.2" material="color: #000; opacity: 0.6"></a-plane>
+<!-- 💖 TEXT BELOW -->
+<a-entity position="0 -0.5 0.01">
 
-    <a-text id="nameText"
-            value="Dear Friend ✨"
-            align="center"
-            color="#FFFFFF"
-            width="4.5"
-            position="0 0.2 0.1">
-    </a-text>
+<a-text id="nameText"
+        value="Loading..."
+        align="center"
+        color="#FFFFFF"
+        width="3"
+        position="0 0.2 0">
+</a-text>
 
-    <a-text id="msgText"
-            value="Loading invitation..."
-            align="center"
-            color="#FFC0CB"
-            width="3"
-            position="0 -0.2 0.1">
-    </a-text>
-  </a-entity>
+<a-text id="msgText"
+        value=""
+        align="center"
+        color="#FF69B4"
+        width="2.5"
+        position="0 -0.2 0">
+</a-text>
+
+</a-entity>
 
 </a-marker>
 
-<a-entity camera="fov: 80"></a-entity>
+<a-entity camera="fov: 100"></a-entity>
 
 </a-scene>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
   const params = new URLSearchParams(window.location.search);
   let name = params.get("name") || "Friend";
+
   name = name.charAt(0).toUpperCase() + name.slice(1);
 
   const messages = [
-    "You are cordially invited to our wedding 💍",
-    "Please join us on our special day ❤️",
-    "We'd love to celebrate our love with you 💖",
-    "Join us as we start our beautiful journey ✨"
+    "You are invited to our wedding 💍",
+    "Join us on our special day ❤️",
+    "Celebrate love with us 💖",
+    "Be part of our beautiful journey ✨"
   ];
 
   const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
   const scene = document.querySelector("a-scene");
 
   scene.addEventListener("loaded", () => {
-    setTimeout(() => {
-      document.querySelector("#nameText").setAttribute("value", `Welcome ${name} ✨`);
-      document.querySelector("#msgText").setAttribute("value", randomMsg);
-    }, 500);
+
+    document.querySelector("#nameText")
+      .setAttribute("value", `Dear ${name} ✨`);
+
+    document.querySelector("#msgText")
+      .setAttribute("value", randomMsg);
+
   });
+
 });
 </script>
 
