@@ -9,11 +9,31 @@
 
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
-    /* Removed the 'cover' property to stop the zooming effect */
-    #arjs-video {
-      width: 100% !important;
-      height: 100% !important;
-      margin-left: 0 !important;
+    
+    /* 📱 BUTTONS STYLING */
+    #menu {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    #menu button {
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: none;
+      background: #ff477e;
+      color: white;
+      font-weight: bold;
+      font-size: 13px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    #menu .refresh-btn {
+      background: #444;
     }
   </style>
 
@@ -22,25 +42,30 @@
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-        const loader = new THREE.TextureLoader();
-        // Uses your GitHub image
-        const texture = loader.load('https://prarthana-0703.github.io/rose_petal.png');
-
-        for (let i = 0; i < 60; i++) {
-          const size = Math.random() * 0.2 + 0.1;
+        const texture = new THREE.TextureLoader().load('https://prarthana-0703.github.io/rose_petal.png');
+        
+        for (let i = 0; i < 70; i++) {
+          const size = Math.random() * 0.25 + 0.15; // Slightly larger for better visibility
           const material = new THREE.MeshBasicMaterial({
-            map: texture, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, depthWrite: false
+            map: texture, 
+            transparent: true, 
+            alphaTest: 0.4, 
+            side: THREE.DoubleSide, 
+            depthWrite: false
           });
           const petal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
-          petal.position.set((Math.random()-0.5)*8, (Math.random()*5)+2, (Math.random()-0.5)*5);
+          
+          // Positioning them in a "falling column" area
+          petal.position.set((Math.random()-0.5)*6, (Math.random()*5)+2, (Math.random()-0.5)*5);
           petal.userData.spin = { x: (Math.random()-0.5)*0.03, y: (Math.random()-0.5)*0.03 };
+          
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
       tick: function () {
         this.petals.forEach(petal => {
-          petal.position.y -= 0.02;
+          petal.position.y -= 0.02; // Graceful raindrop speed
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
           if (petal.position.y < -2) petal.position.y = 5;
@@ -51,6 +76,13 @@
 </head>
 
 <body>
+
+  <div id="menu">
+    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+    <button onclick="window.location.href='gallery.html'">📸 Gallery</button>
+    <button onclick="window.location.href='events.html'">📅 Events</button>
+    <button onclick="window.open('https://maps.app.goo.gl/YourVenueLink')">📍 Location</button>
+  </div>
 
   <a-scene embedded vr-mode-ui="enabled: false"
            arjs="sourceType: webcam; debugUIEnabled: false;">
