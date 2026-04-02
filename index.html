@@ -19,11 +19,22 @@
       font-family: sans-serif;
     }
 
-    /* ✅ IMPORTANT: Fix camera display */
-    #arjs-video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important; /* Works best on Samsung */
+    /* FIX CAMERA (NO ZOOM) */
+    canvas, .a-canvas {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+
+    video, #arjs-video {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: contain !important; /* ✅ NO ZOOM */
     }
 
     /* 📱 BUTTONS */
@@ -61,8 +72,7 @@
         const texture = new THREE.Texture(imgEl);
         texture.needsUpdate = true;
 
-        for (let i = 0; i < 60; i++) {
-
+        for (let i = 0; i < 70; i++) {
           const size = Math.random() * 0.2 + 0.15;
 
           const material = new THREE.MeshBasicMaterial({
@@ -80,9 +90,9 @@
           );
 
           petal.position.set(
-            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 5,
             (Math.random() * 4) + 1,
-            Math.random() * 2
+            Math.random() * 2 + 0.5
           );
 
           petal.userData.spin = {
@@ -103,7 +113,7 @@
 
           if (petal.position.y < -1.5) {
             petal.position.y = 4;
-            petal.position.x = (Math.random() - 0.5) * 4;
+            petal.position.x = (Math.random() - 0.5) * 5;
           }
         });
       }
@@ -134,30 +144,30 @@
     <!-- 🌸 PETALS -->
     <a-entity petal-rain></a-entity>
 
-    <!-- 💍 RING -->
-    <a-torus position="0 1.2 0"
+    <!-- 💍 RING ABOVE -->
+    <a-torus position="0 1.5 0.5"
              radius="0.3"
              radius-tubular="0.05"
              color="#FFD700"
              animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"
-             animation__float="property: position; to: 0 1.4 0; dir: alternate; dur: 2000; loop: true">
+             animation__float="property: position; to: 0 1.7 0.5; dir: alternate; dur: 2000; loop: true">
     </a-torus>
 
-    <!-- 💖 TEXT -->
-    <a-entity position="0 0.2 0">
+    <!-- 💖 TEXT BELOW -->
+    <a-entity position="0 0.3 0.5">
 
-      <a-plane width="3"
+      <a-plane width="3.2"
                height="1.2"
                color="#000"
-               opacity="0.7">
+               opacity="0.65">
       </a-plane>
 
       <a-text id="nameText"
-              value="Dear Friend ✨"
+              value="Dear Guest ✨"
               align="center"
               color="#FFFFFF"
-              width="4"
-              position="0 0.25 0.01">
+              width="5"
+              position="0 0.3 0.1">
       </a-text>
 
       <a-text id="inviteMsg"
@@ -165,19 +175,19 @@
               align="center"
               color="#FFB6C1"
               width="3"
-              position="0 -0.2 0.01">
+              position="0 -0.2 0.1">
       </a-text>
 
     </a-entity>
 
   </a-marker>
 
-  <a-entity camera="fov: 75"></a-entity>
+  <a-entity camera="fov: 80"></a-entity>
 
 </a-scene>
 
 <script>
-  // 💖 NAME PERSONALIZATION
+  // 💖 PERSONALIZATION
   const params = new URLSearchParams(window.location.search);
   let name = params.get("name") || "Friend";
 
@@ -192,12 +202,6 @@
     if (name.toLowerCase() === "prarthana") {
       msgEl.setAttribute("value", "Welcome Prarthana!\nWitness our new beginning 💍");
     }
-  });
-
-  // ✅ FORCE CAMERA START (important for mobile)
-  document.addEventListener("click", () => {
-    const scene = document.querySelector("a-scene");
-    if (scene) scene.play();
   });
 </script>
 
