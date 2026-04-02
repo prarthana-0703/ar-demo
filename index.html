@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AR Horizontal Sliding Gallery</title>
+<title>AR Wedding Invitation</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- ✅ REQUIRED LIBRARIES -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
 
+<style>
+body { margin: 0; overflow: hidden; }
+</style>
+
 </head>
 
-<body style="margin:0; overflow:hidden;">
+<body>
 
 <a-scene
 embedded
@@ -32,91 +37,52 @@ smoothCount="10"
 smoothTolerance="0.01"
 smoothThreshold="5">
 
-<!-- ✅ UPDATED TEXT (ID ADDED) -->
+<!-- 💖 NAME -->
 <a-text
-id="welcomeText"
-value="Our Journey"
-position="0 0.6 -1.2"
+id="nameText"
+value="Loading..."
+position="0 0.7 -1.2"
 align="center"
 color="#FFD700"
 rotation="-90 0 0"
-scale="1.3 1.3 1.3">
+scale="1.4 1.4 1.4">
 </a-text>
 
-<!-- GALLERY -->
+<!-- 💌 MESSAGE -->
+<a-text
+id="msgText"
+value=""
+position="0 0.3 -1.2"
+align="center"
+color="pink"
+rotation="-90 0 0"
+scale="1.2 1.2 1.2">
+</a-text>
+
+<!-- 🎞️ GALLERY -->
 <a-entity
-id="gallery-container"
 position="0 0.1 0"
 animation="property: position;
-           from: 1.5 0.1 0;
-           to: -1.5 0.1 0;
-           dur: 10000;
+           from: 1.2 0.1 0;
+           to: -1.2 0.1 0;
+           dur: 8000;
            dir: alternate;
            loop: true;
            easing: linear">
 
-<!-- PHOTO 1 -->
-<a-entity position="-1.5 0 0">
-<a-plane color="#FFD700" width="1.35" height="1.75" rotation="-90 0 0"></a-plane>
+<!-- IMAGE 1 -->
+<a-image src="#photo1" rotation="-90 0 0"
+         position="-1.2 0 0" width="1.2" height="1.5"></a-image>
 
-<a-image
-src="#photo1"
-rotation="-90 0 0"
-width="1.25"
-height="1.65"
-position="0 0 0.01">
-</a-image>
-</a-entity>
+<!-- IMAGE 2 -->
+<a-image src="#photo2" rotation="-90 0 0"
+         position="0 0 0" width="1.2" height="1.5"></a-image>
 
-<!-- PHOTO 2 -->
-<a-entity position="0 0 0">
-<a-plane color="#FFD700" width="1.35" height="1.75" rotation="-90 0 0"></a-plane>
-
-<a-image
-src="#photo2"
-rotation="-90 0 0"
-width="1.25"
-height="1.65"
-position="0 0 0.01">
-</a-image>
-</a-entity>
-
-<!-- PHOTO 3 -->
-<a-entity position="1.5 0 0">
-<a-plane color="#FFD700" width="1.35" height="1.75" rotation="-90 0 0"></a-plane>
-
-<a-image
-src="#photo3"
-rotation="-90 0 0"
-width="1.25"
-height="1.65"
-position="0 0 0.01">
-</a-image>
-</a-entity>
-
-<!-- PHOTO 4 -->
-<a-entity position="3 0 0">
-<a-plane color="#FFD700" width="1.35" height="1.75" rotation="-90 0 0"></a-plane>
-
-<a-image
-src="#photo4"
-rotation="-90 0 0"
-width="1.25"
-height="1.65"
-position="0 0 0.01">
-</a-image>
-</a-entity>
+<!-- IMAGE 3 -->
+<a-image src="#photo3" rotation="-90 0 0"
+         position="1.2 0 0" width="1.2" height="1.5"></a-image>
 
 </a-entity>
-
-<a-plane
-position="0 0 0"
-rotation="-90 0 0"
-width="4"
-height="3"
-color="#000"
-opacity="0.25">
-</a-plane>
 
 </a-marker>
 
@@ -124,26 +90,36 @@ opacity="0.25">
 
 </a-scene>
 
-<!-- ✅ NAME DETECTION SCRIPT -->
+<!-- ✅ SCRIPT -->
 <script>
-window.addEventListener("load", () => {
+document.addEventListener("DOMContentLoaded", function () {
 
     const params = new URLSearchParams(window.location.search);
     let name = params.get("name") || "Guest";
 
-    // Capitalize first letter
+    // Capitalize
     name = name.charAt(0).toUpperCase() + name.slice(1);
 
-    // Custom message
-    let message = `Welcome ${name} ❤️\nOur Journey`;
+    const messages = [
+        "You are invited to our wedding 💍",
+        "Join us on our special day ❤️",
+        "Celebrate love with us 💖",
+        "Be part of our beautiful journey ✨"
+    ];
 
-    // Wait for AR to load
-    setTimeout(() => {
-        const textEl = document.querySelector("#welcomeText");
-        if (textEl) {
-            textEl.setAttribute("value", message);
-        }
-    }, 1000);
+    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
+    const scene = document.querySelector("a-scene");
+
+    scene.addEventListener("loaded", () => {
+
+        document.querySelector("#nameText")
+            .setAttribute("value", `Welcome ${name} 💖`);
+
+        document.querySelector("#msgText")
+            .setAttribute("value", randomMsg);
+
+    });
 
 });
 </script>
