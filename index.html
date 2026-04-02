@@ -8,14 +8,15 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; background: #000; }
-    /* This is the TRICK for full screen on all Android/iOS phones */
+    body { margin: 0; overflow: hidden; background: #000; position: fixed; width: 100%; height: 100%; }
+    /* 🛑 FORCE FULL SCREEN CAMERA */
     #arjs-video {
       object-fit: cover !important;
       width: 100vw !important;
       height: 100vh !important;
       position: fixed !important;
       top: 0; left: 0;
+      z-index: -1;
     }
   </style>
 
@@ -27,48 +28,57 @@
       },
       init: function () {
         this.petals = [];
-        // Using your direct GitHub path
-        const texture = new THREE.TextureLoader().load('https://prarthana-0703.github.io/rose_petal.png');
+
+        // ✅ THE PRO FIX: Using the preloaded asset correctly
+        const imgEl = document.querySelector('#petalImg');
+        const texture = new THREE.Texture(imgEl);
+        texture.needsUpdate = true;
 
         for (let i = 0; i < this.data.count; i++) {
-          const size = Math.random() * 0.25 + 0.15;
+          const size = Math.random() * 0.2 + 0.15;
           const geometry = new THREE.PlaneGeometry(size, size);
+
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
+            alphaTest: 0.3,
             side: THREE.DoubleSide,
-            depthWrite: false, // Prevents petals from clipping each other
-            alphaTest: 0.1    // Lowered this so they don't disappear
+            depthWrite: false
           });
 
           const petal = new THREE.Mesh(geometry, material);
-          // Spread them out more so they fill the whole screen
+
           petal.position.set(
-            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 8,
             (Math.random() * 5) + 2,
-            (Math.random() - 0.5) * 10
+            (Math.random() - 0.5) * 5
           );
 
           petal.userData.spin = {
-            x: (Math.random() - 0.5) * 0.05,
-            y: (Math.random() - 0.5) * 0.05
+            x: (Math.random() - 0.5) * 0.04,
+            y: (Math.random() - 0.5) * 0.04
           };
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
-      tick: function (time) {
+      tick: function (time, deltaTime) {
         this.petals.forEach(petal => {
+          // Falling
           petal.position.y -= this.data.speed;
-          // Add a little sway/wind
-          petal.position.x += Math.sin(time / 1000) * 0.005;
           
+          // ✨ OPTIONAL UPGRADE: Wind sway
+          petal.position.x += Math.sin(time * 0.001) * 0.005;
+
+          // Rotation
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
 
-          if (petal.position.y < -3) {
-            petal.position.y = 5;
+          // Reset when fallen
+          if (petal.position.y < -2) {
+            petal.position.y = Math.random() * 4 + 2;
+            petal.position.x = (Math.random() - 0.5) * 8;
           }
         });
       }
@@ -78,68 +88,49 @@
 
 <body>
 
-<a-scene embedded vr-mode-ui="enabled:false"
-         arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
+  <a-scene embedded vr-mode-ui="enabled:false"
+           arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
 
-  <a-marker preset="hiro">
+    <a-assets>
+      <img id="petalImg" src="rose_petal.png">
+    </a-assets>
 
-    <a-entity petal-rain></a-entity>
+    <a-marker preset="hiro">
 
-    <a-entity position="0 0.4 0" 
-              geometry="primitive: torusKnot; radius: 0.25; radiusTubular: 0.05;"
-              material="color: #FF1493; metalness: 0.5; roughness: 0.2"
-              animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-              animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
-    </a-entity>
+      <a-entity petal-rain></a-entity>
 
-    <a-entity position="0 1 0" rotation="-90 0 0">
-      <a-plane width="3.2" height="1.4" material="color: #000; opacity: 0.6"></a-plane>
+      <a-entity position="0 0.4 0" 
+                geometry="primitive: torusKnot; radius: 0.25; radiusTubular: 0.05;"
+                material="color: #FF1493; metalness: 0.5; roughness: 0.2"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+                animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
+      </a-entity>
 
-      <a-text id="nameText"
-              value="Welcome ✨"
-              align="center"
-              color="#FFFFFF"
-              width="5"
-              position="0 0.3 0.1">
-      </a-text>
+      <a-entity position="0 1.2 0" rotation="-90 0 0">
+        <a-plane width="3.4" height="1.4" material="color: #000; opacity: 0.7"></a-plane>
+        <a-text id="nameText" value="Dear Friend ✨" align="center" color="#FFFFFF" width="5" position="0 0.3 0.1"></a-text>
+        <a-text id="msgText" value="Join us on our big day! ❤️" align="center" color="#FFB6C1" width="3.5" position="0 -0.2 0.1"></a-text>
+      </a-entity>
 
-      <a-text id="msgText"
-              value="Join us on our big day! ❤️"
-              align="center"
-              color="#FFB6C1"
-              width="3.5"
-              position="0 -0.2 0.1">
-      </a-text>
-    </a-entity>
+    </a-marker>
 
-  </a-marker>
+    <a-entity camera="fov: 80"></a-entity>
 
-  <a-entity camera="fov: 80"></a-entity>
+  </a-scene>
 
-</a-scene>
-
-<script>
-  // Ensure name updates correctly
-  function updateInvite() {
+  <script>
+    // Personalization logic
     const params = new URLSearchParams(window.location.search);
     let name = params.get("name") || "Friend";
     name = name.charAt(0).toUpperCase() + name.slice(1);
 
-    const nameText = document.querySelector("#nameText");
-    const msgText = document.querySelector("#msgText");
-
-    if (nameText) nameText.setAttribute("value", `Dear ${name} ✨`);
-    
-    // Custom message for you!
-    if (name.toLowerCase() === "prarthana") {
-      msgText.setAttribute("value", "Witness the start of our\nforever together! 💍");
-    }
-  }
-
-  // Run on load and scene load
-  window.addEventListener('load', updateInvite);
-  document.querySelector('a-scene').addEventListener('loaded', updateInvite);
-</script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const nameEl = document.querySelector("#nameText");
+        if (nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
+      }, 1000);
+    });
+  </script>
 
 </body>
 </html>
