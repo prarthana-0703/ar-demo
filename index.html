@@ -10,7 +10,7 @@
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     
-    /* 📱 BUTTONS STYLING */
+    /* UI Buttons */
     #menu {
       position: fixed;
       bottom: 20px;
@@ -18,7 +18,6 @@
       text-align: center;
       z-index: 1000;
     }
-
     #menu button {
       margin: 5px;
       padding: 10px 15px;
@@ -29,8 +28,8 @@
       font-weight: bold;
       font-size: 13px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      cursor: pointer;
     }
-    
     .refresh-btn { background: #444 !important; }
   </style>
 
@@ -38,27 +37,28 @@
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-        const loader = new THREE.TextureLoader();
-        // Using a built-in A-Frame texture to ensure it NEVER fails to load
-        const texture = loader.load('https://prarthana-0703.github.io/rose_petal.png');
+        // Pull texture from the preloaded assets
+        const imgEl = document.querySelector('#roseTexture');
+        const texture = new THREE.Texture(imgEl);
+        texture.needsUpdate = true;
 
         for (let i = 0; i < 70; i++) {
           const size = Math.random() * 0.2 + 0.15;
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
-            alphaTest: 0.2, // Ensures petals are visible and sharp
+            alphaTest: 0.2, // Clean edges
             side: THREE.DoubleSide,
             depthWrite: false
           });
 
           const petal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
           
-          // Spread them out like rain
+          // Random scatter
           petal.position.set(
-            (Math.random() - 0.5) * 8, 
+            (Math.random() - 0.5) * 6, 
             (Math.random() * 5) + 2, 
-            (Math.random() - 0.5) * 5
+            (Math.random() - 0.5) * 4
           );
 
           petal.userData.spin = { x: Math.random() * 0.04, y: Math.random() * 0.04 };
@@ -68,10 +68,15 @@
       },
       tick: function () {
         this.petals.forEach(petal => {
-          petal.position.y -= 0.02; // Rain-like falling speed
+          petal.position.y -= 0.02; // Falling speed
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
-          if (petal.position.y < -2) petal.position.y = 5;
+          
+          // Loop back to top
+          if (petal.position.y < -1.5) {
+            petal.position.y = 4;
+            petal.position.x = (Math.random() - 0.5) * 6;
+          }
         });
       }
     });
@@ -83,24 +88,29 @@
   <div id="menu">
     <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
     <button onclick="window.location.href='events.html'">📅 Events</button>
-    <button onclick="window.open('https://maps.google.com')">📍 Location</button>
+    <button onclick="window.open('https://maps.app.goo.gl/YourLinkHere')">📍 Location</button>
   </div>
 
   <a-scene embedded vr-mode-ui="enabled: false"
            arjs="sourceType: webcam; debugUIEnabled: false;">
 
+    <a-assets>
+      <img id="roseTexture" src="rose_petal.png" crossorigin="anonymous">
+    </a-assets>
+
     <a-marker preset="hiro">
       <a-entity petal-rain></a-entity>
 
-      <a-torus-knot position="0 0.3 0" radius="0.2" radius-tubular="0.04" color="#FF1493"
-                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-torus-knot>
+      <a-torus position="0 0.3 0" radius="0.3" radius-tubular="0.05" color="#FFD700"
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-torus>
 
       <a-entity position="0 1 0" rotation="-90 0 0">
         <a-plane width="3.2" height="1.2" color="#000" opacity="0.6"></a-plane>
         
-        <a-text id="nameText" value="Dear Guest ✨" align="center" color="#FFFFFF" width="5" position="0 0.2 0.1"></a-text>
+        <a-text id="nameText" value="Dear Guest ✨" align="center" color="#FFFFFF" 
+                width="5" position="0 0.25 0.1"></a-text>
         
-        <a-text id="inviteMsg" value="Join us on our big day!\nWe'd love to see you there ❤️" 
+        <a-text id="inviteMsg" value="Join us on our big day! ❤️" 
                 align="center" color="#FFB6C1" width="3" position="0 -0.2 0.1"></a-text>
       </a-entity>
     </a-marker>
@@ -109,21 +119,21 @@
   </a-scene>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    let name = params.get("name") || "Friend";
-    name = name.charAt(0).toUpperCase() + name.slice(1);
-    
+    // Personalize using URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    let guestName = urlParams.get("name") || "Friend";
+    guestName = guestName.charAt(0).toUpperCase() + guestName.slice(1);
+
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        const nameEl = document.querySelector("#nameText");
-        const msgEl = document.querySelector("#inviteMsg");
-        if (nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
-        
-        // Personal touch for your specific name!
-        if (name.toLowerCase() === "prarthana") {
-            msgEl.setAttribute("value", "Witness our beautiful\nnew beginning! 💍");
-        }
-      }, 1000);
+      const nameEl = document.querySelector("#nameText");
+      const msgEl = document.querySelector("#inviteMsg");
+
+      if (nameEl) nameEl.setAttribute("value", `Dear ${guestName} ✨`);
+      
+      // Personal touch for your name
+      if (guestName.toLowerCase() === "prarthana") {
+          msgEl.setAttribute("value", "Welcome Prarthana!\nWitness our new beginning 💍");
+      }
     });
   </script>
 
