@@ -9,10 +9,11 @@
 
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
-    #arjs-video { 
-      object-fit: cover !important; 
-      width: 100vw !important; 
-      height: 100vh !important; 
+    /* This forces the camera to fill the entire mobile screen */
+    #arjs-video {
+      object-fit: cover !important;
+      width: 100vw !important;
+      height: 100vh !important;
       position: fixed !important;
       top: 0; left: 0;
     }
@@ -21,58 +22,48 @@
   <script>
     AFRAME.registerComponent('petal-rain', {
       schema: {
-        count: {type: 'number', default: 100},
+        count: {type: 'number', default: 60},
         speed: {type: 'number', default: 0.02}
       },
       init: function () {
         this.petals = [];
-        // Using a reliable hosted PNG of a rose petal
-        const loader = new THREE.TextureLoader();
-        const texture = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/ball.png'); 
-        // Note: I'm using a placeholder sprite, but for actual red petals, 
-        // ensure your rose_petal.png is uploaded to your GitHub repo.
-        
-        const petalTexture = loader.load('https://i.imgur.com/39N6xM4.png'); // High-quality Rose Petal
+        // ✅ FIXED PATH: Using your GitHub username to ensure the image loads correctly
+        const texture = new THREE.TextureLoader().load('https://prarthana-0703.github.io/rose_petal.png');
 
         for (let i = 0; i < this.data.count; i++) {
-          const geometry = new THREE.PlaneGeometry(0.25, 0.25);
+          const size = Math.random() * 0.2 + 0.1;
+          const geometry = new THREE.PlaneGeometry(size, size);
           const material = new THREE.MeshBasicMaterial({
-            map: petalTexture,
+            map: texture,
             transparent: true,
             alphaTest: 0.5,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false
           });
-          const petal = new THREE.Mesh(geometry, material);
 
-          // Randomize starting positions high up
+          const petal = new THREE.Mesh(geometry, material);
           petal.position.set(
             (Math.random() - 0.5) * 6,
-            (Math.random() * 5) + 2,
-            (Math.random() - 0.5) * 6
+            (Math.random() * 4) + 2,
+            (Math.random() - 0.5) * 4
           );
 
-          // Random rotation and sway speed
-          petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-          petal.userData.sway = Math.random() * 0.02;
-          petal.userData.spin = (Math.random() - 0.5) * 0.02;
+          petal.userData.spin = {
+            x: (Math.random() - 0.5) * 0.03,
+            y: (Math.random() - 0.5) * 0.03
+          };
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
-      tick: function (time, deltaTime) {
+      tick: function () {
         this.petals.forEach(petal => {
-          // Falling motion
           petal.position.y -= this.data.speed;
-          // Swaying motion like a raindrop in wind
-          petal.position.x += Math.sin(time / 500) * petal.userData.sway;
-          // Constant spin
-          petal.rotation.z += petal.userData.spin;
-
-          // Reset to top when they fall below marker
-          if (petal.position.y < -1) {
-            petal.position.y = 5;
-            petal.position.x = (Math.random() - 0.5) * 6;
+          petal.rotation.x += petal.userData.spin.x;
+          petal.rotation.y += petal.userData.spin.y;
+          if (petal.position.y < -2) {
+            petal.position.y = Math.random() * 4 + 2;
           }
         });
       }
@@ -82,61 +73,70 @@
 
 <body>
 
-  <a-scene embedded 
-           vr-mode-ui="enabled: false"
-           arjs="sourceType: webcam; debugUIEnabled: false;">
+<a-scene embedded vr-mode-ui="enabled:false"
+         arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
 
-    <a-marker preset="hiro">
+<a-marker preset="hiro">
 
-      <a-entity petal-rain="count: 80; speed: 0.03;"></a-entity>
+  <a-entity petal-rain></a-entity>
 
-      <a-entity position="0 0.5 0" 
-                geometry="primitive: torusKnot; radius: 0.2; radiusTubular: 0.04;"
-                material="color: #ff1493;"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear">
-      </a-entity>
+  <a-entity position="0 0.5 0" 
+            geometry="primitive: torusKnot; radius: 0.25; radiusTubular: 0.05;"
+            material="color: #FF1493; metalness: 0.5; roughness: 0.2"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+            animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; dur: 1000; loop: true">
+  </a-entity>
 
-      <a-entity position="0 1 0" rotation="-90 0 0">
-        
-        <a-plane width="3" height="1.2" material="color: #000; opacity: 0.6"></a-plane>
+  <a-entity position="0 1.2 0" rotation="-90 0 0">
+    <a-plane width="3" height="1.2" material="color: #000; opacity: 0.6"></a-plane>
 
-        <a-text id="nameText"
-                value="Dear Friend ✨"
-                align="center"
-                color="#FFFFFF"
-                width="4.5"
-                position="0 0.2 0.1">
-        </a-text>
+    <a-text id="nameText"
+            value="Dear Friend ✨"
+            align="center"
+            color="#FFFFFF"
+            width="4.5"
+            position="0 0.2 0.1">
+    </a-text>
 
-        <a-text id="msgText"
-                value="We're getting married!\nJoin our celebration ❤️"
-                align="center"
-                color="#ffb3d9"
-                width="3"
-                position="0 -0.2 0.1">
-        </a-text>
+    <a-text id="msgText"
+            value="Loading invitation..."
+            align="center"
+            color="#FFC0CB"
+            width="3"
+            position="0 -0.2 0.1">
+    </a-text>
+  </a-entity>
 
-      </a-entity>
+</a-marker>
 
-    </a-marker>
+<a-entity camera="fov: 80"></a-entity>
 
-    <a-entity camera="fov: 80"></a-entity>
+</a-scene>
 
-  </a-scene>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  let name = params.get("name") || "Friend";
+  name = name.charAt(0).toUpperCase() + name.slice(1);
 
-  <script>
-    // Personalization update
-    window.addEventListener('load', () => {
-      const params = new URLSearchParams(window.location.search);
-      let name = params.get("name") || "Friend";
-      name = name.charAt(0).toUpperCase() + name.slice(1);
+  const messages = [
+    "You are cordially invited to our wedding 💍",
+    "Please join us on our special day ❤️",
+    "We'd love to celebrate our love with you 💖",
+    "Join us as we start our beautiful journey ✨"
+  ];
 
-      setTimeout(() => {
-        const nameEl = document.querySelector("#nameText");
-        if(nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
-      }, 500);
-    });
-  </script>
+  const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+  const scene = document.querySelector("a-scene");
+
+  scene.addEventListener("loaded", () => {
+    setTimeout(() => {
+      document.querySelector("#nameText").setAttribute("value", `Welcome ${name} ✨`);
+      document.querySelector("#msgText").setAttribute("value", randomMsg);
+    }, 500);
+  });
+});
+</script>
 
 </body>
 </html>
