@@ -1,65 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AR Name Display</title>
+  <meta charset="utf-8">
+  <title>AR Wedding Invite</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
+  <!-- ✅ Correct versions -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
 
-<style>
-body { margin: 0; overflow: hidden; }
-</style>
-
+  <style>
+    body { margin: 0; overflow: hidden; }
+  </style>
 </head>
 
 <body>
 
 <a-scene
-embedded
-vr-mode-ui="enabled:false"
-arjs="sourceType: webcam; facingMode: environment; debugUIEnabled:false;">
+  embedded
+  vr-mode-ui="enabled: false"
+  arjs="sourceType: webcam; facingMode: environment; debugUIEnabled: false;">
 
-<!-- MARKER -->
-<a-marker preset="hiro">
+  <!-- Marker -->
+  <a-marker preset="hiro">
 
-<!-- ✅ ONLY TEXT -->
-<a-text
-id="nameText"
-value="Welcome ❤️"
-position="0 0.5 0"
-align="center"
-color="yellow"
-scale="1.5 1.5 1.5">
-</a-text>
+    <!-- Name -->
+    <a-text id="nameText"
+            value="Loading..."
+            position="0 0.6 0"
+            align="center"
+            color="yellow"
+            scale="1.5 1.5 1.5">
+    </a-text>
 
-</a-marker>
+    <!-- Message -->
+    <a-text id="msgText"
+            value=""
+            position="0 0.2 0"
+            align="center"
+            color="pink"
+            scale="1.2 1.2 1.2">
+    </a-text>
 
-<!-- CAMERA -->
-<a-entity camera></a-entity>
+  </a-marker>
+
+  <a-entity camera></a-entity>
 
 </a-scene>
 
-<!-- ✅ NAME SCRIPT -->
 <script>
-window.addEventListener("load", () => {
+document.addEventListener("DOMContentLoaded", function () {
 
     const params = new URLSearchParams(window.location.search);
     let name = params.get("name") || "Guest";
 
-    // Capitalize
     name = name.charAt(0).toUpperCase() + name.slice(1);
 
-    let message = `Welcome ${name} ❤️`;
+    const messages = [
+        "You are invited to our wedding 💍",
+        "Join us on our special day ❤️",
+        "Celebrate love with us 💖",
+        "Be part of our beautiful journey ✨"
+    ];
 
-    // Wait for AR to load
-    setTimeout(() => {
-        const textEl = document.querySelector("#nameText");
-        if (textEl) {
-            textEl.setAttribute("value", message);
-        }
-    }, 1000);
+    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
+    // Wait for scene to be ready
+    const scene = document.querySelector("a-scene");
+
+    scene.addEventListener("loaded", () => {
+        document.querySelector("#nameText")
+            .setAttribute("value", `Welcome ${name} 💖`);
+
+        document.querySelector("#msgText")
+            .setAttribute("value", randomMsg);
+    });
 
 });
 </script>
