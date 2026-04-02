@@ -1,118 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Wedding Invitation</title>
+<title>AR Name Display</title>
 
-    <!-- A-Frame -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- AR.js -->
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ar.js@3.3.2/aframe/build/aframe-ar.js"></script>
 
-    <!-- Tesseract OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+<style>
+body { margin: 0; overflow: hidden; }
+</style>
 
-    <style>
-        body { margin: 0; overflow: hidden; }
-
-        #scanBtn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            padding: 12px;
-            background: pink;
-            border: none;
-            font-size: 16px;
-            border-radius: 10px;
-        }
-    </style>
 </head>
 
 <body>
 
-<button id="scanBtn">Scan Name</button>
+<a-scene
+embedded
+vr-mode-ui="enabled:false"
+arjs="sourceType: webcam; facingMode: environment; debugUIEnabled:false;">
 
-<a-scene embedded arjs>
+<!-- MARKER -->
+<a-marker preset="hiro">
 
-    <!-- MARKER -->
-    <a-marker preset="hiro">
+<!-- ✅ ONLY TEXT -->
+<a-text
+id="nameText"
+value="Welcome ❤️"
+position="0 0.5 0"
+align="center"
+color="yellow"
+scale="1.5 1.5 1.5">
+</a-text>
 
-        <!-- DEBUG BOX (to confirm AR is working) -->
-        <a-box position="0 0.5 0" color="blue"></a-box>
+</a-marker>
 
-        <!-- BACKGROUND PANEL -->
-        <a-plane 
-            position="0 1 0"
-            rotation="-90 0 0"
-            width="3"
-            height="1.5"
-            color="black">
-        </a-plane>
-
-        <!-- TEXT -->
-        <a-text id="inviteText"
-            value="Scan a name..."
-            position="0 1 0.1"
-            rotation="-90 0 0"
-            scale="4 4 4"
-            color="yellow"
-            align="center">
-        </a-text>
-
-    </a-marker>
-
-    <a-entity camera></a-entity>
+<!-- CAMERA -->
+<a-entity camera></a-entity>
 
 </a-scene>
 
+<!-- ✅ NAME SCRIPT -->
 <script>
-    const btn = document.getElementById("scanBtn");
-    const textEl = document.getElementById("inviteText");
+window.addEventListener("load", () => {
 
-    btn.onclick = async () => {
+    const params = new URLSearchParams(window.location.search);
+    let name = params.get("name") || "Guest";
 
-        const video = document.querySelector("video");
+    // Capitalize
+    name = name.charAt(0).toUpperCase() + name.slice(1);
 
-        if (!video) {
-            alert("Camera not ready!");
-            return;
-        }
+    let message = `Welcome ${name} ❤️`;
 
-        // Capture image
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(video, 0, 0);
-
-        textEl.setAttribute("value", "Scanning...");
-
-        try {
-            const result = await Tesseract.recognize(canvas, 'eng');
-            let detected = result.data.text.toLowerCase();
-
-            console.log("Detected:", detected);
-
-            let message = "";
-
-            if (detected.includes("priya")) {
-                message = "Dear Priya 💖\nWelcome to our Wedding!";
-            }
-            else if (detected.includes("rahul")) {
-                message = "Dear Rahul 🎉\nJoin our special day!";
-            }
-            else {
-                message = "You are invited 💍\nJoin our wedding!";
-            }
-
+    // Wait for AR to load
+    setTimeout(() => {
+        const textEl = document.querySelector("#nameText");
+        if (textEl) {
             textEl.setAttribute("value", message);
-
-        } catch (err) {
-            console.error(err);
-            textEl.setAttribute("value", "Error scanning!");
         }
-    };
+    }, 1000);
+
+});
 </script>
 
 </body>
