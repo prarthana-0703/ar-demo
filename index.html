@@ -8,35 +8,32 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; background: #000; position: fixed; width: 100vw; height: 100vh; }
+    /* 🛑 FORCE FULL SCREEN WITHOUT BLACK BARS */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
     
-    /* 🛑 FORCE FULL SCREEN WITHOUT DISTORTING TRACKING */
     #arjs-video {
-      object-fit: cover !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      position: fixed !important;
-      top: 0; left: 0;
+      object-fit: cover !important; /* This stops the 'zoomed' look */
       z-index: -2 !important;
     }
 
-    #menu {
-      position: fixed;
-      bottom: 25px;
-      width: 100%;
-      text-align: center;
-      z-index: 1000;
+    .a-canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      top: 0 !important;
+      left: 0 !important;
     }
 
+    #menu {
+      position: fixed; bottom: 25px; width: 100%; text-align: center; z-index: 1000;
+    }
     #menu button {
-      margin: 5px;
-      padding: 12px 22px;
-      border-radius: 30px;
-      border: none;
-      background: linear-gradient(45deg, #ff477e, #ff8fa3);
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin: 5px; padding: 12px 20px; border-radius: 30px; border: none;
+      background: #ff477e; color: white; font-weight: bold;
     }
   </style>
 
@@ -44,34 +41,25 @@
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
-        const imgEl = document.querySelector('#petalImg');
-        const texture = new THREE.Texture(imgEl);
-        texture.needsUpdate = true;
-
-        for (let i = 0; i < 80; i++) {
+        const texture = new THREE.TextureLoader().load('rose_petal.png');
+        for (let i = 0; i < 60; i++) {
           const size = Math.random() * 0.2 + 0.15;
-          const geometry = new THREE.PlaneGeometry(size, size);
           const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true,
-            alphaTest: 0.3,
-            side: THREE.DoubleSide,
-            depthWrite: false
+            map: texture, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, depthWrite: false
           });
-
-          const petal = new THREE.Mesh(geometry, material);
-          petal.position.set((Math.random()-0.5)*8, (Math.random()*5)+2, (Math.random()-0.5)*6);
-          petal.userData.spin = { x: (Math.random()-0.5)*0.04, y: (Math.random()-0.5)*0.04 };
+          const petal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
+          petal.position.set((Math.random()-0.5)*8, (Math.random()*5)+2, (Math.random()-0.5)*5);
+          petal.userData.spin = { x: (Math.random()-0.5)*0.03, y: (Math.random()-0.5)*0.03 };
           this.el.object3D.add(petal);
           this.petals.push(petal);
         }
       },
       tick: function () {
         this.petals.forEach(petal => {
-          petal.position.y -= 0.02;
+          petal.position.y -= 0.025; // Constant falling speed
           petal.rotation.x += petal.userData.spin.x;
           petal.rotation.y += petal.userData.spin.y;
-          if (petal.position.y < -3) petal.position.y = 5;
+          if (petal.position.y < -2) petal.position.y = 5;
         });
       }
     });
@@ -80,49 +68,41 @@
 
 <body>
 
-  <a-scene 
-    embedded 
-    vr-mode-ui="enabled: false"
-    renderer="antialias: true; logarithmicDepthBuffer: true; precision: medium;"
-    arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%; videoTexture: true;">
+<a-scene embedded vr-mode-ui="enabled: false"
+         arjs="sourceType: webcam; debugUIEnabled: false; fitSelected: true; videoTexture: true;">
 
-    <a-assets>
-      <img id="petalImg" src="rose_petal.png">
-    </a-assets>
+  <a-marker preset="hiro">
+    <a-entity petal-rain></a-entity>
 
-    <a-marker preset="hiro">
-      <a-entity petal-rain></a-entity>
+    <a-torus-knot position="0 0.3 0" radius="0.2" radius-tubular="0.04" color="#FF1493"
+                  animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-torus-knot>
 
-      <a-torus-knot position="0 0.4 0" radius="0.25" radius-tubular="0.05" color="#FF1493"
-                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-torus-knot>
+    <a-entity position="0 1 0" rotation="-90 0 0">
+      <a-plane width="3.2" height="1.2" color="#000" opacity="0.6"></a-plane>
+      <a-text id="nameText" value="Dear Friend ✨" align="center" color="#FFFFFF" width="5" position="0 0.2 0.1"></a-text>
+      <a-text value="Join us on our big day! ❤️" align="center" color="#FFB6C1" width="3" position="0 -0.2 0.1"></a-text>
+    </a-entity>
+  </a-marker>
 
-      <a-entity position="0 1.1 0" rotation="-90 0 0">
-        <a-plane width="3.2" height="1.4" material="color: #000; opacity: 0.7"></a-plane>
-        <a-text id="nameText" value="Dear Friend ✨" align="center" color="#FFFFFF" width="5" position="0 0.3 0.1"></a-text>
-        <a-text id="msgText" value="Join us on our big day! ❤️" align="center" color="#FFB6C1" width="3.5" position="0 -0.2 0.1"></a-text>
-      </a-entity>
-    </a-marker>
+  <a-entity camera="fov: 80"></a-entity>
 
-    <a-entity camera="fov: 80"></a-entity>
-  </a-scene>
+</a-scene>
 
-  <div id="menu">
-    <button onclick="alert('Opening Gallery...')">📸 Gallery</button>
-    <button onclick="alert('Opening Events...')">📅 Events</button>
-    <button onclick="alert('Opening Location...')">📍 Location</button>
-  </div>
+<div id="menu">
+  <button onclick="location.reload()">🔄 Refresh</button>
+  <button onclick="alert('Save the date!')">📅 Events</button>
+</div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    let name = params.get("name") || "Friend";
-    name = name.charAt(0).toUpperCase() + name.slice(1);
-    
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.querySelector("#nameText").setAttribute("value", `Dear ${name} ✨`);
-      }, 1000);
-    });
-  </script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  let name = params.get("name") || "Friend";
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.querySelector("#nameText").setAttribute("value", `Dear ${name} ✨`);
+    }, 1000);
+  });
+</script>
 
 </body>
 </html>
