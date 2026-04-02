@@ -4,6 +4,7 @@
   <title>AR Wedding Invitation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- AFRAME + ARJS -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
@@ -15,7 +16,7 @@
       height: 100%;
     }
 
-    /* 🔥 FIX CAMERA FULLSCREEN */
+    /* 🔥 FULL SCREEN CAMERA FIX */
     video {
       position: fixed !important;
       top: 0;
@@ -26,6 +27,7 @@
       z-index: -1;
     }
 
+    /* BUTTON */
     #menu {
       position: fixed;
       bottom: 20px;
@@ -45,6 +47,7 @@
   </style>
 
   <script>
+    // 🌸 PETAL RAIN
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
@@ -53,7 +56,7 @@
         );
 
         for (let i = 0; i < 40; i++) {
-          const mat = new THREE.MeshBasicMaterial({
+          const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
             side: THREE.DoubleSide
@@ -61,7 +64,7 @@
 
           const petal = new THREE.Mesh(
             new THREE.PlaneGeometry(0.3, 0.3),
-            mat
+            material
           );
 
           petal.position.set(
@@ -95,8 +98,8 @@
 
 <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
 
+  <!-- MODEL -->
   <a-assets>
-    <!-- ✅ YOUR MODEL -->
     <a-asset-item id="model"
       src="https://prarthana-0703.github.io/ar-demo/model-v1.glb">
     </a-asset-item>
@@ -107,16 +110,16 @@
     <!-- 🌸 PETALS -->
     <a-entity petal-rain></a-entity>
 
-    <!-- 💍 MODEL (FIXED SIZE + POSITION) -->
+    <!-- 💍 MODEL (FIXED PERFECT) -->
     <a-entity 
       gltf-model="#model"
-      position="0 0.2 0"
-      scale="1.2 1.2 1.2"
-      rotation="0 0 0">
+      position="0 0.3 0"
+      scale="2 2 2"
+      rotation="90 180 0">
     </a-entity>
 
-    <!-- 💬 TEXT (FIXED VISIBILITY) -->
-    <a-entity position="0 -0.8 0">
+    <!-- 💬 TEXT -->
+    <a-entity position="0 -1 0">
 
       <a-plane width="2.5" height="1" color="black" opacity="0.6"></a-plane>
 
@@ -146,6 +149,7 @@
 </a-scene>
 
 <script>
+  // 💖 NAME PERSONALIZATION
   const params = new URLSearchParams(window.location.search);
   let name = params.get("name") || "Friend";
   name = name.charAt(0).toUpperCase() + name.slice(1);
