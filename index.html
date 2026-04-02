@@ -19,22 +19,11 @@
       font-family: sans-serif;
     }
 
-    /* 📱 CAMERA FIX (NO ZOOM) */
-    canvas, .a-canvas {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-    }
-
-    video, #arjs-video {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: contain !important;
+    /* ✅ IMPORTANT: Fix camera display */
+    #arjs-video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important; /* Works best on Samsung */
     }
 
     /* 📱 BUTTONS */
@@ -145,7 +134,7 @@
     <!-- 🌸 PETALS -->
     <a-entity petal-rain></a-entity>
 
-    <!-- 💍 RING ABOVE -->
+    <!-- 💍 RING -->
     <a-torus position="0 1.2 0"
              radius="0.3"
              radius-tubular="0.05"
@@ -154,7 +143,7 @@
              animation__float="property: position; to: 0 1.4 0; dir: alternate; dur: 2000; loop: true">
     </a-torus>
 
-    <!-- 💖 TEXT BELOW -->
+    <!-- 💖 TEXT -->
     <a-entity position="0 0.2 0">
 
       <a-plane width="3"
@@ -203,6 +192,12 @@
     if (name.toLowerCase() === "prarthana") {
       msgEl.setAttribute("value", "Welcome Prarthana!\nWitness our new beginning 💍");
     }
+  });
+
+  // ✅ FORCE CAMERA START (important for mobile)
+  document.addEventListener("click", () => {
+    const scene = document.querySelector("a-scene");
+    if (scene) scene.play();
   });
 </script>
 
