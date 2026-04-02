@@ -8,59 +8,110 @@
 
     <!-- AR.js -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+    <!-- Tesseract OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; }
+
+        #scanBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px;
+            background: pink;
+            border: none;
+            font-size: 16px;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 
-<body style="margin: 0; overflow: hidden;">
+<body>
 
-<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+<button id="scanBtn">Scan Name</button>
 
-    <!-- Hiro Marker -->
+<a-scene embedded arjs>
+
+    <!-- MARKER -->
     <a-marker preset="hiro">
 
-        <!-- Background Card -->
+        <!-- DEBUG BOX (to confirm AR is working) -->
+        <a-box position="0 0.5 0" color="blue"></a-box>
+
+        <!-- BACKGROUND PANEL -->
         <a-plane 
-            position="0 0 0"
+            position="0 1 0"
             rotation="-90 0 0"
             width="3"
-            height="2"
-            color="#fff5f8">
+            height="1.5"
+            color="black">
         </a-plane>
 
-        <!-- Personalized Text -->
-        <a-text 
-            id="inviteText"
-            position="0 0.1 0"
+        <!-- TEXT -->
+        <a-text id="inviteText"
+            value="Scan a name..."
+            position="0 1 0.1"
             rotation="-90 0 0"
-            align="center"
-            color="#d63384"
-            width="5"
-            value="Loading...">
+            scale="4 4 4"
+            color="yellow"
+            align="center">
         </a-text>
 
     </a-marker>
 
     <a-entity camera></a-entity>
+
 </a-scene>
 
 <script>
-    // 👇 CHANGE NAME HERE
-    let guestName = "Priya";  
+    const btn = document.getElementById("scanBtn");
+    const textEl = document.getElementById("inviteText");
 
-    let message = "";
+    btn.onclick = async () => {
 
-    if (guestName.toLowerCase() === "priya") {
-        message = "Dear Priya 💖\nYou are invited to our wedding!";
-    } 
-    else if (guestName.toLowerCase() === "rahul") {
-        message = "Dear Rahul 🎉\nJoin us for our special day!";
-    } 
-    else {
-        message = "Dear Guest 💍\nYou are warmly invited!";
-    }
+        const video = document.querySelector("video");
 
-    // Set text in AR
-    window.onload = () => {
-        document.querySelector("#inviteText").setAttribute("value", message);
+        if (!video) {
+            alert("Camera not ready!");
+            return;
+        }
+
+        // Capture image
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+
+        textEl.setAttribute("value", "Scanning...");
+
+        try {
+            const result = await Tesseract.recognize(canvas, 'eng');
+            let detected = result.data.text.toLowerCase();
+
+            console.log("Detected:", detected);
+
+            let message = "";
+
+            if (detected.includes("priya")) {
+                message = "Dear Priya 💖\nWelcome to our Wedding!";
+            }
+            else if (detected.includes("rahul")) {
+                message = "Dear Rahul 🎉\nJoin our special day!";
+            }
+            else {
+                message = "You are invited 💍\nJoin our wedding!";
+            }
+
+            textEl.setAttribute("value", message);
+
+        } catch (err) {
+            console.error(err);
+            textEl.setAttribute("value", "Error scanning!");
+        }
     };
 </script>
 
