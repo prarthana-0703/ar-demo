@@ -1,97 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Wedding Invitation with Name Recognition</title>
+    <title>Simple AR Cube</title>
 
-    <!-- A-Frame & AR.js -->
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+    <!-- AR.js -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-
-    <style>
-        body { margin: 0; overflow: hidden; }
-        #captureBtn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            padding: 10px;
-            background: pink;
-            border: none;
-            font-size: 16px;
-        }
-    </style>
 </head>
 
-<body>
-
-<button id="captureBtn">Scan Name</button>
+<body style="margin: 0; overflow: hidden;">
 
 <a-scene embedded arjs>
+
+    <!-- Hiro Marker -->
     <a-marker preset="hiro">
 
-        <!-- Invitation Text -->
-        <a-text id="inviteText"
-                value="Scan a name..."
-                position="0 1 0"
-                align="center"
-                color="red"
-                width="4">
-        </a-text>
+        <!-- Cube -->
+        <a-box 
+            position="0 0.5 0"
+            material="color: blue;"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+        </a-box>
 
     </a-marker>
 
+    <!-- Camera -->
     <a-entity camera></a-entity>
+
 </a-scene>
-
-<script>
-    const button = document.getElementById("captureBtn");
-    const textEl = document.getElementById("inviteText");
-
-    button.onclick = async () => {
-
-        // Capture frame from video
-        const video = document.querySelector("video");
-
-        if (!video) {
-            alert("Camera not ready!");
-            return;
-        }
-
-        // Create canvas
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(video, 0, 0);
-
-        // OCR using Tesseract
-        textEl.setAttribute("value", "Scanning...");
-
-        const result = await Tesseract.recognize(canvas, 'eng');
-
-        let detectedText = result.data.text.trim().toLowerCase();
-        console.log("Detected:", detectedText);
-
-        // PERSONALIZATION LOGIC
-        let message = "";
-
-        if (detectedText.includes("priya")) {
-            message = "Dear Priya 💖\nYou are invited to our wedding!";
-        }
-        else if (detectedText.includes("rahul")) {
-            message = "Dear Rahul 🎉\nJoin us for our special day!";
-        }
-        else {
-            message = "You are invited 💍\nJoin our wedding celebration!";
-        }
-
-        // Show in AR
-        textEl.setAttribute("value", message);
-    };
-</script>
 
 </body>
 </html>
