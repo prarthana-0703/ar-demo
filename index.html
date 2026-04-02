@@ -1,272 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VIT Nav (Force Update)</title>
+    <title>AR Wedding Invitation with Name Recognition</title>
 
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <!-- A-Frame & AR.js -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
 
-<style>
-    /* UI Reset */
-    body { margin: 0; overflow: hidden; background: black; font-family: sans-serif; }
-    #camera-feed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
+    <!-- Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 
-    /* The AR Arrow */
-    #arrow-container { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); pointer-events: none; }
-    #arrow-img {
-        width: 140px; height: 140px;
-        background-image: url("https://cdn-icons-png.flaticon.com/512/724/724927.png");
-        background-size: contain; background-repeat: no-repeat;
-        filter: drop-shadow(0 0 10px #00e5ff);
-        transition: transform 0.3s linear; /* Faster transition for responsiveness */
-    }
-
-    /* Info Bar */
-    .info-box {
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.85); color: white;
-        padding: 15px 25px; border-radius: 30px; text-align: center;
-        border: 2px solid #00e5ff; width: 85%; z-index: 10;
-    }
-    #instruction { font-size: 18px; font-weight: bold; display: block; margin-bottom: 5px; }
-    #distance { font-size: 14px; color: #ccc; }
-
-    /* Debug Status (CRITICAL FOR TESTING) */
-    #debug-status {
-        position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
-        font-size: 12px; color: lime; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 10px; text-align: center;
-    }
-
-    /* Mini Map */
-    #mini-map {
-        position: fixed; bottom: 20px; right: 20px;
-        width: 150px; height: 150px; border-radius: 50%;
-        border: 3px solid white; background: #333; z-index: 10;
-        transform: rotateX(0deg); 
-    }
-
-    /* Start Button */
-    #start-btn {
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        padding: 15px 40px; font-size: 20px; background: #00e5ff; border: none; font-weight: bold; cursor: pointer; border-radius: 50px; z-index: 20;
-    }
-</style>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #captureBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px;
+            background: pink;
+            border: none;
+            font-size: 16px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <video id="camera-feed" autoplay playsinline muted></video>
+<button id="captureBtn">Scan Name</button>
 
-    <div class="info-box">
-        <span id="instruction">To Q-Block...</span>
-        <span id="distance">-- m</span>
-    </div>
+<a-scene embedded arjs>
+    <a-marker preset="hiro">
 
-    <div id="debug-status">Waiting for GPS...</div>
+        <!-- Invitation Text -->
+        <a-text id="inviteText"
+                value="Scan a name..."
+                position="0 1 0"
+                align="center"
+                color="red"
+                width="4">
+        </a-text>
 
-    <div id="arrow-container">
-        <div id="arrow-img"></div>
-    </div>
+    </a-marker>
 
-    <div id="mini-map"></div>
-    
-    <button id="start-btn" onclick="startApp()">START NAVIGATION</button>
-
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <a-entity camera></a-entity>
+</a-scene>
 
 <script>
-    // ================= CONFIGURATION =================
-    const MAPBOX_TOKEN = 'pk.eyJ1IjoiaGVtYW50aDg1MDMiLCJhIjoiY21rNzV5c2w2MHlqeTNncjI5bjkyeWJwaiJ9.NnunzAB_24Ntn83H5hRcyQ'; 
-    const DESTINATION = [79.1638, 12.9742]; // Q-Block
-    const TURN_BUBBLE = 15; // Meters
+    const button = document.getElementById("captureBtn");
+    const textEl = document.getElementById("inviteText");
 
-    // ================= STATE =================
-    let map;
-    let userMarker;
-    let steps = []; 
-    let currentStepIndex = 0;
-    let isNavigating = false;
-    
-    // Stability Variables
-    let prevLat = 0, prevLng = 0;
-    let currentHeading = 0; 
-    let targetBearing = 0; 
+    button.onclick = async () => {
 
-    // ================= STARTUP =================
-    async function startApp() {
-        document.getElementById("start-btn").style.display = "none";
-        document.getElementById("instruction").innerText = "Walk to Align...";
+        // Capture frame from video
+        const video = document.querySelector("video");
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById("camera-feed").srcObject = stream;
-        } catch(e) { console.error("Cam error", e); }
-
-        initMap();
-        
-        if(navigator.geolocation) {
-            navigator.geolocation.watchPosition(
-                handleGPS, 
-                err => console.warn("GPS Error", err), 
-                { enableHighAccuracy: true, maximumAge: 0 }
-            );
-        }
-    }
-
-    function initMap() {
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-        map = new mapboxgl.Map({
-            container: 'mini-map',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: DESTINATION, zoom: 17, pitch: 40, attributionControl: false
-        });
-
-        // Add Markers
-        const el = document.createElement('div');
-        el.className = 'marker'; el.style.backgroundColor = 'red';
-        el.style.width = '15px'; el.style.height = '15px'; el.style.borderRadius = '50%'; el.style.border = '2px solid white';
-        new mapboxgl.Marker(el).setLngLat(DESTINATION).addTo(map);
-
-        const userEl = document.createElement('div');
-        userEl.className = 'marker'; userEl.style.backgroundColor = '#00e5ff';
-        userEl.style.width = '15px'; userEl.style.height = '15px'; userEl.style.borderRadius = '50%'; userEl.style.border = '2px solid white';
-        userMarker = new mapboxgl.Marker(userEl).setLngLat(DESTINATION).addTo(map);
-    }
-
-    // ================= CORE LOGIC (MANUAL MOVEMENT CHECK) =================
-    function handleGPS(pos) {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        const accuracy = pos.coords.accuracy || 0;
-
-        // 1. UPDATE MAP
-        if (map && userMarker) {
-            userMarker.setLngLat([lng, lat]);
-            map.setCenter([lng, lat]); 
-        }
-
-        // 2. CHECK MOVEMENT (Manual Calculation)
-        // If this is the first point, just save it
-        if (prevLat === 0) {
-            prevLat = lat; prevLng = lng;
+        if (!video) {
+            alert("Camera not ready!");
             return;
         }
 
-        // Calculate distance moved since last update
-        const distMoved = getDistance(prevLat, prevLng, lat, lng);
-        
-        // Debug Text (So you can see what is happening!)
-        document.getElementById("debug-status").innerText = 
-            `Moved: ${distMoved.toFixed(1)}m | Acc: ${Math.round(accuracy)}m`;
+        // Create canvas
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        // 🔴 THE FIX: Force update if moved > 2 meters (Ignore phone "Speed")
-        if (distMoved > 2.0) { 
-            
-            // Calculate Heading based on change in position
-            currentHeading = getBearing(prevLat, prevLng, lat, lng);
-            
-            // Rotate Map to Face Forward
-            map.easeTo({ bearing: currentHeading, duration: 1000, easing: x => x });
-            
-            // Update Previous Position
-            prevLat = lat; 
-            prevLng = lng;
-            
-        } else {
-            // We haven't moved enough. KEEP OLD HEADING. Do not update.
-            // This stops the jitter when standing still.
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+
+        // OCR using Tesseract
+        textEl.setAttribute("value", "Scanning...");
+
+        const result = await Tesseract.recognize(canvas, 'eng');
+
+        let detectedText = result.data.text.trim().toLowerCase();
+        console.log("Detected:", detectedText);
+
+        // PERSONALIZATION LOGIC
+        let message = "";
+
+        if (detectedText.includes("priya")) {
+            message = "Dear Priya 💖\nYou are invited to our wedding!";
+        }
+        else if (detectedText.includes("rahul")) {
+            message = "Dear Rahul 🎉\nJoin us for our special day!";
+        }
+        else {
+            message = "You are invited 💍\nJoin our wedding celebration!";
         }
 
-        // 3. GET ROUTE (First run only)
-        if (!isNavigating) {
-            getRoute(lat, lng);
-            isNavigating = true; 
-            return;
-        }
-
-        updateGuidance(lat, lng);
-    }
-
-    function updateGuidance(lat, lng) {
-        if (steps.length === 0) return;
-
-        const targetStep = steps[currentStepIndex];
-        const targetLng = targetStep.maneuver.location[0];
-        const targetLat = targetStep.maneuver.location[1];
-
-        const dist = getDistance(lat, lng, targetLat, targetLng);
-        
-        document.getElementById("instruction").innerText = targetStep.maneuver.instruction;
-        document.getElementById("distance").innerText = Math.round(dist) + " meters";
-
-        if (dist < TURN_BUBBLE) {
-            if (currentStepIndex < steps.length - 1) {
-                currentStepIndex++;
-            } else {
-                document.getElementById("instruction").innerText = "ARRIVED!";
-                document.getElementById("arrow-img").style.display = "none";
-                return;
-            }
-        }
-
-        // CALCULATE ROTATION
-        targetBearing = getBearing(lat, lng, targetLat, targetLng);
-        let rot = targetBearing - currentHeading;
-        
-        while(rot < -180) rot += 360;
-        while(rot > 180) rot -= 360;
-
-        // Snap to straight if angle is small (Forgiving Arrow)
-        if (Math.abs(rot) < 20) rot = 0;
-
-        document.getElementById("arrow-img").style.transform = `rotate(${rot}deg)`;
-    }
-
-    // ================= ROUTE API =================
-    async function getRoute(lat, lng) {
-        document.getElementById("instruction").innerText = "Calculating Path...";
-        const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${lng},${lat};${DESTINATION[0]},${DESTINATION[1]}?steps=true&geometries=geojson&access_token=${MAPBOX_TOKEN}`;
-        
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            if(data.routes && data.routes.length > 0) {
-                steps = data.routes[0].legs[0].steps;
-                if(steps.length > 1) steps.shift(); 
-                
-                const routeGeoJSON = data.routes[0].geometry;
-                if (map.getSource('route')) {
-                    map.getSource('route').setData(routeGeoJSON);
-                } else {
-                    map.addLayer({
-                        id: 'route', type: 'line', source: {
-                            type: 'geojson', data: { type: 'Feature', properties: {}, geometry: routeGeoJSON }
-                        },
-                        layout: { 'line-join': 'round', 'line-cap': 'round' },
-                        paint: { 'line-color': '#00e5ff', 'line-width': 5, 'line-opacity': 0.8 }
-                    });
-                }
-                document.getElementById("instruction").innerText = "Walk to Align";
-            }
-        } catch(e) { console.error(e); }
-    }
-
-    // ================= MATH =================
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    function getBearing(lat1, lon1, lat2, lon2) {
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
-        const x = Math.cos(lat1 * Math.PI / 180)*Math.sin(lat2 * Math.PI / 180) - Math.sin(lat1 * Math.PI / 180)*Math.cos(lat2 * Math.PI / 180)*Math.cos(dLon);
-        return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-    }
+        // Show in AR
+        textEl.setAttribute("value", message);
+    };
 </script>
+
 </body>
 </html>
