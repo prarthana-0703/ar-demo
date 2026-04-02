@@ -18,6 +18,65 @@
       top: 0; left: 0;
     }
   </style>
+
+  <script>
+    // --- CUSTOM PETAL RAIN COMPONENT ---
+    // This creates hundreds of flourishing rose petals.
+    AFRAME.registerComponent('petal-rain', {
+      schema: {
+        count: {type: 'number', default: 250}, // Number of petals
+        speed: {type: 'number', default: 0.03} // Falling speed
+      },
+      init: function () {
+        this.petals = [];
+        const texture = new THREE.TextureLoader().load('rose_petal.png'); // Use the user's image
+
+        for (let i = 0; i < this.data.count; i++) {
+          // Create a flat square (plane) to hold the petal texture
+          const geometry = new THREE.PlaneGeometry(0.2, 0.2); 
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true, // Crucial for using the PNG alpha channel
+            side: THREE.DoubleSide // Visible from both sides
+          });
+          const petal = new THREE.Mesh(geometry, material);
+
+          // Give the petal a random start position (floating in the air)
+          petal.position.set(
+            (Math.random() - 0.5) * 8, // Random X (spread across scene)
+            (Math.random() * 5) + 3,  // Random Y (starts high)
+            (Math.random() - 0.5) * 5 // Random Z (depth)
+          );
+
+          // Give the petal a random starting rotation and spin speed
+          petal.rotation.set(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+          petal.userData.spinSpeed = {
+            x: (Math.random() - 0.5) * 0.05,
+            y: (Math.random() - 0.5) * 0.05
+          };
+
+          this.el.object3D.add(petal); // Add petal to the AR marker
+          this.petals.push(petal);
+        }
+      },
+      tick: function (time, deltaTime) {
+        // This runs EVERY FRAME to animate the petals.
+        this.petals.forEach(petal => {
+          // 1. Drop the petal
+          petal.position.y -= this.data.speed;
+
+          // 2. Spin the petal
+          petal.rotation.x += petal.userData.spinSpeed.x;
+          petal.rotation.y += petal.userData.spinSpeed.y;
+
+          // 3. Loop: If it hits the "floor", put it back at the top
+          if (petal.position.y < -2) {
+            petal.position.y = (Math.random() * 5) + 3;
+          }
+        });
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -26,7 +85,13 @@
            vr-mode-ui="enabled: false"
            arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 100%; displayHeight: 100%;">
 
+    <a-assets>
+      <img id="petalTexture" src="rose_petal.png">
+    </a-assets>
+
     <a-marker preset="hiro">
+
+      <a-entity petal-rain="count: 200; speed: 0.04;"></a-entity>
 
       <a-entity position="0 0.5 0" 
                 geometry="primitive: torusKnot; radius: 0.3; radiusTubular: 0.05;"
@@ -71,19 +136,22 @@
   </a-scene>
 
   <script>
+    // --- PERSONALIZATION SCRIPT ---
+    // Updates the name and message based on the URL parameter: ?name=Rahul
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       let name = params.get("name") || "Friend";
+      // Capitalize first letter (Rahul)
       name = name.charAt(0).toUpperCase() + name.slice(1);
 
-      // We use a small timeout to make sure AR.js is ready to swap the text
+      // Delay update slightly to ensure AR.js initialization doesn't block it
       setTimeout(() => {
         const nameEl = document.querySelector("#nameText");
         const msgEl = document.querySelector("#msgText");
 
-        if(nameEl) nameEl.setAttribute("value", `Welcome ${name} ✨`);
+        if(nameEl) nameEl.setAttribute("value", `Dear ${name} ✨`);
         
-        // Optional: Different messages for different people
+        // Example of a specific message for a VIP guest
         if(name.toLowerCase() === "prarthana") {
             msgEl.setAttribute("value", "You are cordially invited\nto witness our beautiful\njourney begin! 💍");
         }
