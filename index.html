@@ -2,43 +2,39 @@
 <html>
 <head>
   <title>AR Wedding Invitation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- AFRAME + ARJS -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <style>
     html, body {
       margin: 0;
-      padding: 0;
       overflow: hidden;
       width: 100%;
       height: 100%;
-      background: black;
     }
 
-    /* FIX FULL SCREEN CAMERA */
-    video, canvas {
+    /* 🔥 FIX CAMERA FULLSCREEN */
+    video {
       position: fixed !important;
       top: 0;
       left: 0;
       width: 100vw !important;
       height: 100vh !important;
       object-fit: cover !important;
+      z-index: -1;
     }
 
-    /* BUTTONS */
     #menu {
       position: fixed;
       bottom: 20px;
       width: 100%;
       text-align: center;
-      z-index: 999;
+      z-index: 10;
     }
 
     #menu button {
-      margin: 5px;
       padding: 10px 18px;
       border-radius: 25px;
       border: none;
@@ -49,7 +45,6 @@
   </style>
 
   <script>
-    // 🌸 PETAL RAIN
     AFRAME.registerComponent('petal-rain', {
       init: function () {
         this.petals = [];
@@ -57,26 +52,25 @@
           'https://prarthana-0703.github.io/ar-demo/rose_petal.png'
         );
 
-        for (let i = 0; i < 60; i++) {
-          const material = new THREE.MeshBasicMaterial({
+        for (let i = 0; i < 40; i++) {
+          const mat = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
-            alphaTest: 0.3,
             side: THREE.DoubleSide
           });
 
           const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, 0.2),
-            material
+            new THREE.PlaneGeometry(0.3, 0.3),
+            mat
           );
 
           petal.position.set(
-            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 3,
             Math.random() * 3 + 1,
             Math.random() * 2
           );
 
-          petal.userData.speed = Math.random() * 0.02 + 0.01;
+          petal.userData.speed = 0.01 + Math.random() * 0.01;
 
           this.el.object3D.add(petal);
           this.petals.push(petal);
@@ -95,82 +89,72 @@
 
 <body>
 
-  <!-- BUTTONS -->
-  <div id="menu">
-    <button onclick="location.reload()">🔄 Refresh</button>
-    <button onclick="window.location.href='events.html'">📅 Events</button>
-    <button onclick="window.open('https://maps.google.com')">📍 Location</button>
-  </div>
+<div id="menu">
+  <button onclick="window.open('https://maps.google.com')">📍 Location</button>
+</div>
 
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true;"
-    arjs="sourceType: webcam; debugUIEnabled: false;">
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
 
-    <!-- ASSETS -->
-    <a-assets>
-      <!-- 🔥 YOUR GLB MODEL (FIXED PATH) -->
-      <a-asset-item 
-        id="coupleModel" 
-        src="https://prarthana-0703.github.io/ar-demo/model-v1.glb">
-      </a-asset-item>
-    </a-assets>
+  <a-assets>
+    <!-- ✅ YOUR MODEL -->
+    <a-asset-item id="model"
+      src="https://prarthana-0703.github.io/ar-demo/model-v1.glb">
+    </a-asset-item>
+  </a-assets>
 
-    <a-marker preset="hiro">
+  <a-marker preset="hiro">
 
-      <!-- 🌸 PETALS -->
-      <a-entity petal-rain></a-entity>
+    <!-- 🌸 PETALS -->
+    <a-entity petal-rain></a-entity>
 
-      <!-- 💍 GLB MODEL (REPLACES RING) -->
-      <a-entity 
-        gltf-model="#coupleModel"
-        position="0 0.4 0"
-        scale="0.35 0.35 0.35"
-        rotation="0 180 0"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 9000">
-      </a-entity>
+    <!-- 💍 MODEL (FIXED SIZE + POSITION) -->
+    <a-entity 
+      gltf-model="#model"
+      position="0 0.2 0"
+      scale="1.2 1.2 1.2"
+      rotation="0 0 0">
+    </a-entity>
 
-      <!-- 💬 TEXT BELOW MODEL -->
-      <a-entity position="0 -0.3 0" rotation="-90 0 0">
-        
-        <a-plane width="3.5" height="1.4" color="#000" opacity="0.6"></a-plane>
+    <!-- 💬 TEXT (FIXED VISIBILITY) -->
+    <a-entity position="0 -0.8 0">
 
-        <a-text id="nameText"
-                value="Dear Guest ✨"
-                align="center"
-                color="#FFFFFF"
-                width="5"
-                position="0 0.3 0.1">
-        </a-text>
+      <a-plane width="2.5" height="1" color="black" opacity="0.6"></a-plane>
 
-        <a-text id="inviteMsg"
-                value="Join us on our big day! ❤️"
-                align="center"
-                color="#FFB6C1"
-                width="3"
-                position="0 -0.2 0.1">
-        </a-text>
+      <a-text 
+        id="nameText"
+        value="Dear Friend 💖"
+        align="center"
+        color="#FFFFFF"
+        width="4"
+        position="0 0.2 0.01">
+      </a-text>
 
-      </a-entity>
+      <a-text 
+        value="Join us on our big day!"
+        align="center"
+        color="#FFB6C1"
+        width="3"
+        position="0 -0.2 0.01">
+      </a-text>
 
-    </a-marker>
+    </a-entity>
 
-    <a-entity camera="fov: 80"></a-entity>
+  </a-marker>
 
-  </a-scene>
+  <a-entity camera></a-entity>
 
-  <script>
-    // 💖 NAME PERSONALIZATION
-    const params = new URLSearchParams(window.location.search);
-    let name = params.get("name") || "Friend";
-    name = name.charAt(0).toUpperCase() + name.slice(1);
+</a-scene>
 
-    setTimeout(() => {
-      const el = document.querySelector("#nameText");
-      if (el) el.setAttribute("value", `Dear ${name} ✨`);
-    }, 1000);
-  </script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  let name = params.get("name") || "Friend";
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+
+  setTimeout(() => {
+    document.querySelector("#nameText")
+      .setAttribute("value", `Dear ${name} 💖`);
+  }, 1000);
+</script>
 
 </body>
 </html>
