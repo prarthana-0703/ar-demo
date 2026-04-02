@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Cube - Hiro Marker</title>
+    <title>AR Wedding Invitation</title>
 
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
@@ -12,36 +12,57 @@
 
 <body style="margin: 0; overflow: hidden;">
 
-<a-scene
-    embedded
-    arjs="sourceType: webcam; debugUIEnabled: false;"
->
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
 
     <!-- Hiro Marker -->
     <a-marker preset="hiro">
 
-        <!-- Cube -->
-        <a-box 
-            position="0 0.5 0"
-            scale="0.5 0.5 0.5"
-            color="blue"
-            material="opacity: 0.9"
-        >
-            <!-- Rotation Animation -->
-            <a-animation 
-                attribute="rotation"
-                to="0 360 0"
-                dur="3000"
-                repeat="indefinite">
-            </a-animation>
-        </a-box>
+        <!-- Background Card -->
+        <a-plane 
+            position="0 0 0"
+            rotation="-90 0 0"
+            width="3"
+            height="2"
+            color="#fff5f8">
+        </a-plane>
+
+        <!-- Personalized Text -->
+        <a-text 
+            id="inviteText"
+            position="0 0.1 0"
+            rotation="-90 0 0"
+            align="center"
+            color="#d63384"
+            width="5"
+            value="Loading...">
+        </a-text>
 
     </a-marker>
 
-    <!-- Camera -->
     <a-entity camera></a-entity>
-
 </a-scene>
+
+<script>
+    // 👇 CHANGE NAME HERE
+    let guestName = "Priya";  
+
+    let message = "";
+
+    if (guestName.toLowerCase() === "priya") {
+        message = "Dear Priya 💖\nYou are invited to our wedding!";
+    } 
+    else if (guestName.toLowerCase() === "rahul") {
+        message = "Dear Rahul 🎉\nJoin us for our special day!";
+    } 
+    else {
+        message = "Dear Guest 💍\nYou are warmly invited!";
+    }
+
+    // Set text in AR
+    window.onload = () => {
+        document.querySelector("#inviteText").setAttribute("value", message);
+    };
+</script>
 
 </body>
 </html>
