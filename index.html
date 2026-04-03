@@ -1,197 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AR Wedding Invitation</title>
+  <title>AR Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- AFRAME + ARJS -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <!-- ✅ Stable, compatible versions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      background: black;
-    }
-
-    /* 🔥 CAMERA FIX */
-    video {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-      z-index: -1;
-    }
-
-    canvas {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-    }
-
-    /* START BUTTON */
-    #startBtn {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 30px;
-      background: #ff477e;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 30px;
-      z-index: 999;
-    }
-
-    #menu {
-      position: fixed;
-      bottom: 20px;
-      width: 100%;
-      text-align: center;
-      display: none;
-    }
-
-    #menu button {
-      padding: 10px 18px;
-      border-radius: 20px;
-      border: none;
-      background: #ff477e;
-      color: white;
-    }
+    * { margin: 0; padding: 0; }
+    body { overflow: hidden; }
   </style>
-
-  <!-- 🌸 PETALS -->
-  <script>
-    AFRAME.registerComponent('petal-rain', {
-      init: function () {
-        this.petals = [];
-        const texture = new THREE.TextureLoader().load(
-          'https://prarthana-0703.github.io/ar-demo/rose_petal.png'
-        );
-
-        for (let i = 0; i < 30; i++) {
-          const mat = new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true,
-            side: THREE.DoubleSide
-          });
-
-          const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, 0.2),
-            mat
-          );
-
-          petal.position.set(
-            (Math.random() - 0.5) * 3,
-            Math.random() * 2 + 1,
-            Math.random()
-          );
-
-          this.el.object3D.add(petal);
-          this.petals.push(petal);
-        }
-      },
-
-      tick: function () {
-        this.petals.forEach(p => {
-          p.position.y -= 0.01;
-          if (p.position.y < -1) p.position.y = 2;
-        });
-      }
-    });
-  </script>
 </head>
 
 <body>
+  <!-- ✅ vr-mode-ui disabled (not needed for AR on mobile) -->
+  <!-- ✅ renderer alpha:true makes background transparent (shows camera) -->
+  <!-- ✅ embedded + arjs sourceType webcam -->
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    renderer="antialias: true; alpha: true; precision: medium;"
+    vr-mode-ui="enabled: false"
+    loading-screen="enabled: false"
+  >
 
-<!-- 🔴 START BUTTON -->
-<button id="startBtn">💖 Tap to Start Invitation</button>
+    <!-- ✅ Hiro marker — print or open on screen: https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg -->
+    <a-marker preset="hiro">
+      <a-box position="0 0.5 0" rotation="0 45 0" color="#FF4444" shadow></a-box>
+    </a-marker>
 
-<div id="menu">
-  <button onclick="location.reload()">Refresh</button>
-</div>
+    <!-- ✅ Camera entity required -->
+    <a-entity camera></a-entity>
 
-<!-- AR SCENE -->
-<a-scene
-  id="scene"
-  embedded
-  vr-mode-ui="enabled: false"
-  arjs="sourceType: webcam; debugUIEnabled: false;"
-  style="display: none;">
-
-  <a-assets>
-    <a-asset-item id="model"
-      src="https://prarthana-0703.github.io/ar-demo/model-v1.glb">
-    </a-asset-item>
-  </a-assets>
-
-  <a-marker preset="hiro">
-
-    <a-entity petal-rain></a-entity>
-
-    <!-- 💍 MODEL -->
-    <a-entity 
-      gltf-model="#model"
-      position="0 0.5 0"
-      scale="0.2 0.2 0.2"
-      rotation="0 180 0">
-    </a-entity>
-
-    <!-- TEXT -->
-    <a-entity position="0 -0.7 0">
-      <a-plane width="2.5" height="1" color="black" opacity="0.6"></a-plane>
-
-      <a-text 
-        value="Dear Friend 💖"
-        align="center"
-        color="#FFFFFF"
-        width="3"
-        position="0 0.2 0.01">
-      </a-text>
-
-      <a-text 
-        value="Join us on our big day!"
-        align="center"
-        color="#FFB6C1"
-        width="2.5"
-        position="0 -0.2 0.01">
-      </a-text>
-    </a-entity>
-
-  </a-marker>
-
-  <a-entity camera></a-entity>
-
-</a-scene>
-
-<script>
-const startBtn = document.getElementById("startBtn");
-const scene = document.getElementById("scene");
-const menu = document.getElementById("menu");
-
-startBtn.addEventListener("click", () => {
-  startBtn.style.display = "none";
-  scene.style.display = "block";
-  menu.style.display = "block";
-
-  setTimeout(() => {
-    const video = document.querySelector("video");
-    if (video) {
-      video.setAttribute("playsinline", true);
-      video.setAttribute("autoplay", true);
-      video.style.width = "100vw";
-      video.style.height = "100vh";
-    }
-  }, 1000);
-});
-</script>
-
+  </a-scene>
 </body>
 </html>
