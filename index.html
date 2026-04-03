@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AR Cube Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Cube Fix</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
   <!-- AFRAME + ARJS -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -13,6 +13,16 @@
       margin: 0;
       overflow: hidden;
     }
+
+    /* 🔥 FIX ZOOM ISSUE */
+    video {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: contain !important; /* 🔥 KEY FIX */
+    }
   </style>
 </head>
 
@@ -21,22 +31,26 @@
 <a-scene
   embedded
   vr-mode-ui="enabled: false"
-  arjs="sourceType: webcam; debugUIEnabled: true;">
+  renderer="precision: mediump"
+  arjs="
+    sourceType: webcam;
+    debugUIEnabled: true;
+    displayWidth: 640;
+    displayHeight: 480;
+  ">
 
-  <!-- HIRO MARKER -->
   <a-marker preset="hiro">
 
-    <!-- 🔴 RED CUBE -->
+    <!-- 🔴 CUBE -->
     <a-box 
       position="0 0.5 0"
-      material="color: red;"
+      color="red"
       animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
     </a-box>
 
   </a-marker>
 
-  <!-- CAMERA -->
-  <a-entity camera></a-entity>
+  <a-entity camera="fov: 60"></a-entity>
 
 </a-scene>
 
