@@ -1,79 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Wedding AR Invitation</title>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
-  <style>
-    html, body {
-      margin: 0;
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      background: black;
-    }
-
-    /* 🔥 CAMERA FIX (NO ZOOM / NO STRETCH) */
-    video {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: contain !important; /* ✅ KEY FIX */
-      z-index: -1;
-    }
-
-    canvas {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-    }
-  </style>
+    <title>Wedding AR Invitation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        /* Forces the camera to fill the screen without stretching the 3D objects */
+        #arjs-video {
+            object-fit: cover !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+    </style>
 </head>
 
-<body>
+<body style="margin: 0px; overflow: hidden;">
+    <a-scene 
+        embedded 
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
+        gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;">
 
-<a-scene
-  embedded
-  vr-mode-ui="enabled: false"
-  renderer="precision: mediump; antialias: true; alpha: true;"
-  arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 640; displayHeight: 480;"
->
+        <a-assets>
+            <a-asset-item id="wedding-model" src="model-v1.glb"></a-asset-item>
+        </a-assets>
 
-  <!-- ✅ LOAD MODEL -->
-  <a-assets>
-    <a-asset-item id="wedding-model" src="model-v1.glb"></a-asset-item>
-  </a-assets>
+        <a-marker preset="hiro">
+            <a-entity 
+                gltf-model="#wedding-model"
+                scale="0.35 0.35 0.35" 
+                position="0 0.1 0"
+                rotation="0 45 0"
+                animation="property: rotation; to: 0 405 0; loop: true; dur: 12000; easing: linear">
+            </a-entity>
+        </a-marker>
 
-  <a-marker preset="hiro">
+        <a-entity light="type: ambient; intensity: 2;"></a-entity>
+        <a-entity light="type: directional; intensity: 1;" position="1 4 3"></a-entity>
 
-    <!-- 💍 MODEL (FIXED ROTATION + POSITION) -->
-    <a-entity 
-      gltf-model="#wedding-model"
-
-      position="0 0.3 0"
-      scale="0.5 0.5 0.5"
-
-      rotation="0 180 0"   <!-- ✅ FIXED (no tilt now) -->
-
-      animation="property: rotation; to: 0 360 0; loop: true; dur: 12000">
-    </a-entity>
-
-  </a-marker>
-
-  <!-- 💡 LIGHTING -->
-  <a-entity light="type: ambient; intensity: 1.5"></a-entity>
-  <a-entity light="type: directional; intensity: 1" position="1 2 1"></a-entity>
-
-  <!-- 📷 CAMERA -->
-  <a-entity camera="fov: 60"></a-entity>
-
-</a-scene>
-
+        <a-entity camera></a-entity>
+    </a-scene>
 </body>
 </html>
