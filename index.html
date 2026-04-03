@@ -27,15 +27,15 @@
             <a-asset-item id="wedding-model" src="model-v1.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro">
-            <a-entity 
-                gltf-model="#wedding-model"
-                scale="0.35 0.35 0.35" 
-                position="0 0.2 0"
-                rotation="-90 45 0"
-                animation="property: rotation; to: -90 405 0; loop: true; dur: 12000; easing: linear">
-            </a-entity>
-        </a-marker>
+      <a-marker preset="hiro">
+    <a-entity 
+        gltf-model="#wedding-model"
+        scale="0.3 0.3 0.3" 
+        position="0 0.1 0"
+        rotation="-90 45 0"
+        animation="property: rotation; to: -90 405 0; loop: true; dur: 12000; easing: linear">
+    </a-entity>
+</a-marker>
 
         <a-entity light="type: ambient; intensity: 2;"></a-entity>
         <a-entity light="type: directional; intensity: 1;" position="1 4 3"></a-entity>
