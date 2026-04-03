@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wedding AR Invitation - Stable Layout</title>
+    <title>Wedding AR Invitation - Final Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -15,7 +15,7 @@
     <a-scene 
         embedded 
         vr-mode-ui="enabled: false"
-        renderer="logarithmicDepthBuffer: true; antialias: true;"
+        renderer="logarithmicDepthBuffer: true; antialias: true; precision: mediump;"
         arjs="sourceType: webcam; debugUIEnabled: false;">
 
         <a-assets>
@@ -29,7 +29,7 @@
             <a-entity 
                 gltf-model="#gate-model"
                 scale="0.8 0.8 0.8" 
-                position="0 0.0 -0.5" 
+                position="0 0 -0.5" 
                 rotation="-90 0 0">
             </a-entity>
 
@@ -48,11 +48,6 @@
                 position="0 0.3 0"
                 rotation="-90 0 0">
             </a-entity>
-
-            <a-image src="#petal-texture" position="-0.4 1.5 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0"
-                     animation="property: position; to: -0.4 0.2 0.2; loop: true; dur: 3500; easing: linear"></a-image>
-            <a-image src="#petal-texture" position="0.4 1.8 -0.1" scale="0.1 0.1 0.1" rotation="-90 0 0"
-                     animation="property: position; to: 0.4 0.3 -0.1; loop: true; dur: 4500; easing: linear"></a-image>
 
             <a-text 
                 value="SAVE THE DATE: 25.12.2026" 
@@ -74,9 +69,7 @@
 
         </a-marker>
 
-        <a-entity light="type: ambient; intensity: 3.0;"></a-entity>
-        <a-entity light="type: directional; intensity: 1.5; position: 1 5 3;"></a-entity>
-        
+        <a-entity light="type: ambient; intensity: 2.5;"></a-entity>
         <a-entity camera></a-entity>
     </a-scene>
 </body>
