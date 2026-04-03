@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wedding AR Invitation - Side Gate</title>
+    <title>Wedding AR Invitation - Final Positioning</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -30,15 +30,15 @@
                 value="RAHUL WEDS KIARA" 
                 align="center" 
                 color="#FFD700" 
-                position="0 1.8 0" 
+                position="0 2.4 0" 
                 rotation="-90 0 0"
-                width="3.8">
+                width="3.5">
             </a-text>
 
             <a-entity 
                 gltf-model="#gate-model"
-                scale="0.8 0.8 0.8" 
-                position="-0.8 0.2 -0.3"
+                scale="1.0 1.0 1.0" 
+                position="0 0.2 -0.6"
                 rotation="-90 0 0">
             </a-entity>
 
@@ -49,16 +49,16 @@
                 rotation="-90 0 0">
             </a-entity>
 
-            <a-image src="#petal-texture" position="-0.4 1.2 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0"
+            <a-image src="#petal-texture" position="-0.4 1.5 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0"
                      animation="property: position; to: -0.4 0.2 0.2; loop: true; dur: 3500; easing: linear"></a-image>
-            <a-image src="#petal-texture" position="0.4 1.5 -0.1" scale="0.1 0.1 0.1" rotation="-90 0 0"
+            <a-image src="#petal-texture" position="0.4 1.8 -0.1" scale="0.1 0.1 0.1" rotation="-90 0 0"
                      animation="property: position; to: 0.4 0.3 -0.1; loop: true; dur: 4500; easing: linear"></a-image>
 
             <a-text 
                 value="SAVE THE DATE: 25.12.2026" 
                 align="center" 
                 color="#FFFFFF" 
-                position="0 0 0.9" 
+                position="0 0 0.8" 
                 rotation="-90 0 0"
                 width="2.2">
             </a-text>
@@ -69,13 +69,13 @@
                 color="#FFC0CB" 
                 position="0 -0.1 1.2" 
                 rotation="-90 0 0"
-                width="1.8">
+                width="2.0">
             </a-text>
 
         </a-marker>
 
-        <a-entity light="type: ambient; intensity: 2.8;"></a-entity>
-        <a-entity light="type: directional; intensity: 1.2; position: 1 4 3;"></a-entity>
+        <a-entity light="type: ambient; intensity: 3.0;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5; position: 1 5 3;"></a-entity>
         
         <a-entity camera></a-entity>
     </a-scene>
