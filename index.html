@@ -4,6 +4,7 @@
   <title>AR Wedding Invitation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- AFRAME + ARJS -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
@@ -13,9 +14,10 @@
       overflow: hidden;
       width: 100%;
       height: 100%;
+      background: black;
     }
 
-    /* 🔥 FIX CAMERA FULLSCREEN */
+    /* 🔥 FULLSCREEN CAMERA FIX */
     video {
       position: fixed !important;
       top: 0;
@@ -23,9 +25,16 @@
       width: 100vw !important;
       height: 100vh !important;
       object-fit: cover !important;
-      z-index: -1;
+      z-index: -2;
     }
 
+    canvas {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+    }
+
+    /* BUTTON */
     #menu {
       position: fixed;
       bottom: 20px;
@@ -44,6 +53,7 @@
     }
   </style>
 
+  <!-- 🌸 PETAL RAIN -->
   <script>
     AFRAME.registerComponent('petal-rain', {
       init: function () {
@@ -52,22 +62,23 @@
           'https://prarthana-0703.github.io/ar-demo/rose_petal.png'
         );
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 35; i++) {
           const mat = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
+            alphaTest: 0.3,
             side: THREE.DoubleSide
           });
 
           const petal = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.3, 0.3),
+            new THREE.PlaneGeometry(0.25, 0.25),
             mat
           );
 
           petal.position.set(
             (Math.random() - 0.5) * 3,
             Math.random() * 3 + 1,
-            Math.random() * 2
+            Math.random()
           );
 
           petal.userData.speed = 0.01 + Math.random() * 0.01;
@@ -93,10 +104,14 @@
   <button onclick="window.open('https://maps.google.com')">📍 Location</button>
 </div>
 
-<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+<a-scene
+  embedded
+  vr-mode-ui="enabled: false"
+  renderer="precision: mediump"
+  arjs="sourceType: webcam; debugUIEnabled: false;">
 
   <a-assets>
-    <!-- ✅ YOUR MODEL -->
+    <!-- ✅ MODEL -->
     <a-asset-item id="model"
       src="https://prarthana-0703.github.io/ar-demo/model-v1.glb">
     </a-asset-item>
@@ -107,53 +122,68 @@
     <!-- 🌸 PETALS -->
     <a-entity petal-rain></a-entity>
 
-    <!-- 💍 MODEL (FIXED SIZE + POSITION) -->
+    <!-- 🔴 DEBUG BOX (REMOVE LATER) -->
+    <!-- <a-box color="red" position="0 0.5 0"></a-box> -->
+
+    <!-- 💍 MODEL (FIXED) -->
     <a-entity 
       gltf-model="#model"
-      position="0 0.2 0"
-      scale="1.2 1.2 1.2"
-      rotation="0 0 0">
+      position="0 0.6 0"
+      scale="0.18 0.18 0.18"
+      rotation="0 180 0">
     </a-entity>
 
-    <!-- 💬 TEXT (FIXED VISIBILITY) -->
-    <a-entity position="0 -0.8 0">
+    <!-- 💬 TEXT -->
+    <a-entity position="0 -0.7 0">
 
-      <a-plane width="2.5" height="1" color="black" opacity="0.6"></a-plane>
+      <a-plane width="2.6" height="1" color="black" opacity="0.6"></a-plane>
 
       <a-text 
         id="nameText"
         value="Dear Friend 💖"
         align="center"
         color="#FFFFFF"
-        width="4"
-        position="0 0.2 0.01">
+        width="3.5"
+        position="0 0.25 0.05">
       </a-text>
 
       <a-text 
         value="Join us on our big day!"
         align="center"
         color="#FFB6C1"
-        width="3"
-        position="0 -0.2 0.01">
+        width="2.8"
+        position="0 -0.2 0.05">
       </a-text>
 
     </a-entity>
 
   </a-marker>
 
-  <a-entity camera></a-entity>
+  <a-entity camera="fov: 80"></a-entity>
 
 </a-scene>
 
 <script>
+  // PERSONAL NAME
   const params = new URLSearchParams(window.location.search);
   let name = params.get("name") || "Friend";
   name = name.charAt(0).toUpperCase() + name.slice(1);
 
   setTimeout(() => {
-    document.querySelector("#nameText")
-      .setAttribute("value", `Dear ${name} 💖`);
+    const el = document.querySelector("#nameText");
+    if (el) el.setAttribute("value", `Dear ${name} 💖`);
   }, 1000);
+
+  // 🔥 SAMSUNG CAMERA FIX
+  setTimeout(() => {
+    const video = document.querySelector("video");
+    if (video) {
+      video.setAttribute("playsinline", true);
+      video.style.width = "100vw";
+      video.style.height = "100vh";
+      video.style.objectFit = "cover";
+    }
+  }, 1500);
 </script>
 
 </body>
