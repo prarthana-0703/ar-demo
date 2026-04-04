@@ -1,22 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
+    <title>AR Wedding Scene</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 </head>
 
-<body style="margin:0; overflow:hidden;">
+<body style="margin: 0; overflow: hidden;">
 
-<a-scene embedded arjs>
+<a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
 
-  <a-marker preset="hiro">
-    <a-box position="0 0.5 0" color="green"></a-box>
-  </a-marker>
+    <a-light type="ambient" intensity="1"></a-light>
+    <a-light type="directional" position="1 2 1"></a-light>
 
-  <a-entity camera></a-entity>
+    <a-marker preset="hiro">
+
+        <a-entity 
+            gltf-model="wedding_gate-v1.glb"
+            position="0 0 0" 
+            scale="1.5 1.5 1.5">
+        </a-entity>
+
+        <a-entity 
+            gltf-model="model-v1-v2-v1 (1).glb"
+            position="0 0.1 0"
+            scale="0.6 0.6 0.6">
+        </a-entity>
+
+        <a-plane 
+            src="rose_petal.png"
+            position="-0.4 2 0"
+            width="0.3" height="0.3"
+            material="transparent: true; side: double; shader: flat"
+            animation__fall="property: position; to: -0.4 0 0; dur: 4000; loop: true"
+            animation__rotate="property: rotation; to: 360 360 360; dur: 3000; loop: true">
+        </a-plane>
+
+        <a-text 
+            value="Rahul & Saira"
+            position="0 2.5 0"
+            align="center"
+            color="#FFD700"
+            scale="1.5 1.5 1.5"
+            look-at="[camera]">
+        </a-text>
+
+        <a-text 
+            value="Weds"
+            position="0 2.2 0"
+            align="center"
+            color="white"
+            scale="1 1 1"
+            look-at="[camera]">
+        </a-text>
+
+        <a-text 
+            value="With great joy in our hearts,\nwe invite you to celebrate our special day."
+            position="0 0.5 1"
+            align="center"
+            color="gold"
+            width="3"
+            look-at="[camera]">
+        </a-text>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
 
 </a-scene>
-
 </body>
 </html>
