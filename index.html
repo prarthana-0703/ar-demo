@@ -1,31 +1,86 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://unpkg.com/aframe-particle-system-component@1.1.3/dist/aframe-particle-system-component.min.js"></script>
-  </head>
+<head>
+    <title>Wedding AR Invitation - Final Positioning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        #arjs-video { object-fit: cover !important; width: 100vw !important; height: 100vh !important; }
+    </style>
+</head>
 
-  <body style="margin: 0px; overflow: hidden;">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-      
-      <a-assets>
-        <a-asset-item id="myModel" src="./model-v1.glb"></a-asset-item>
-      </a-assets>
-<a-marker preset="hiro">
-  <a-box position="0 0.5 0" material="color: red; opacity: 0.5;"></a-box>
+<body style="margin: 0px; overflow: hidden;">
+    <a-scene 
+        embedded 
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; antialias: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false;">
 
-  <a-entity 
-    gltf-model="./model-v1.glb" 
-    position="0 0 0" 
-    scale="1 1 1"
-    @error="console.log('Model failed to load')">
-  </a-entity>
-  
-  <a-light type="ambient" color="#FFF"></a-light>
+        <a-assets>
+            <a-asset-item id="couple-model" src="model-v1.glb"></a-asset-item>
+            <a-asset-item id="gate-model" src="wedding_gate-v1.glb"></a-asset-item>
+            <img id="petal-texture" src="rose_petal.png">
+        </a-assets>
+
+       <a-marker preset="hiro">
+    
+    <a-entity 
+        gltf-model="#gate-model"
+        scale="0.4 0.4 0.4" 
+        position="0 0.3 0" 
+        rotation="-90 0 0">
+    </a-entity>
+
+    <a-text 
+        value="RAHUL WEDS KIARA" 
+        align="center" 
+        color="#FFD700" 
+        position="0 6.0 0" 
+        rotation="-90 0 0"
+        width="3.5">
+    </a-text>
+
+    <a-entity 
+        gltf-model="#couple-model"
+        scale="0.5 0.5 0.5" 
+        position="0 0.3 0"
+        rotation="-90 0 0">
+    </a-entity>
+
+    ...
 </a-marker>
 
-      <a-entity camera></a-entity>
-    </a-scene>
-  </body>
+            <a-image src="#petal-texture" position="-0.4 1.5 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0"
+                     animation="property: position; to: -0.4 0.2 0.2; loop: true; dur: 3500; easing: linear"></a-image>
+            <a-image src="#petal-texture" position="0.4 1.8 -0.1" scale="0.1 0.1 0.1" rotation="-90 0 0"
+                     animation="property: position; to: 0.4 0.3 -0.1; loop: true; dur: 4500; easing: linear"></a-image>
+
+            <a-text 
+                value="SAVE THE DATE: 25.12.2026" 
+                align="center" 
+                color="#FFFFFF" 
+                position="0 0 0.8" 
+                rotation="-90 0 0"
+                width="2.2">
+            </a-text>
+
+            <a-text 
+                value="Together is a beautiful place to be." 
+                align="center" 
+                color="#FFC0CB" 
+                position="0 -0.1 1.2" 
+                rotation="-90 0 0"
+                width="2.0">
+            </a-text>
+
+        </a-marker>
+
+        <a-entity light="type: ambient; intensity: 3.0;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5; position: 1 5 3;"></a-entity>
+        
+        <a-entity camera></a-entity>
+    </a-scene>
+</body>
 </html>
