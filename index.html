@@ -3,9 +3,11 @@
 <head>
     <title>AR Wedding Scene</title>
 
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+    <!-- AR.js -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 </head>
 
 <body style="margin: 0; overflow: hidden;">
@@ -13,78 +15,93 @@
 <a-scene embedded arjs>
 
     <!-- Lighting -->
-    <a-light type="ambient" intensity="1.2"></a-light>
-    <a-light type="directional" position="1 5 1"></a-light>
+    <a-light type="ambient" intensity="1"></a-light>
+    <a-light type="directional" position="1 2 1"></a-light>
 
     <a-marker preset="hiro">
 
-        <!-- 💐 Gate -->
+        <!-- 💐 Wedding Gate -->
         <a-entity 
-            gltf-model="gate.glb"
-            position="0 -1 0"
+            gltf-model="wedding_gate-v1.glb"
+            position="0 -0.8 0"
             scale="1.5 1.5 1.5"
             rotation="-90 0 0">
         </a-entity>
 
         <!-- 💍 Couple -->
         <a-entity 
-            gltf-model="couple.glb"
-            position="0 0.05 0"
+            gltf-model="model-v1-v2-v1 (1).glb"
+            position="0 -1 0.2"
             scale="0.6 0.6 0.6"
             rotation="-90 0 0">
         </a-entity>
 
-        <!-- 🌸 Petals -->
+        <!-- 🌸 PETALS -->
         <a-plane 
             src="rose_petal.png"
             position="-0.4 2 0"
             width="0.3" height="0.3"
-            material="transparent: true; side: double"
+            material="transparent: true; side: double; shader: flat"
             look-at="[camera]"
-            animation="property: position; to: -0.4 -1 0; dur: 4000; loop: true">
+            animation__fall="property: position; to: -0.4 -1 0; dur: 4000; loop: true"
+            animation__rotate="property: rotation; to: 360 360 360; dur: 3000; loop: true">
         </a-plane>
 
         <a-plane 
             src="rose_petal.png"
-            position="0.4 2.3 0"
+            position="0.3 2.2 0"
             width="0.3" height="0.3"
-            material="transparent: true; side: double"
+            material="transparent: true; side: double; shader: flat"
             look-at="[camera]"
-            animation="property: position; to: 0.4 -1 0; dur: 5000; loop: true">
+            animation__fall="property: position; to: 0.3 -1 0; dur: 3500; loop: true"
+            animation__rotate="property: rotation; to: 360 360 360; dur: 2500; loop: true">
         </a-plane>
 
-        <!-- 💖 Title -->
+        <a-plane 
+            src="rose_petal.png"
+            position="0 2.5 0"
+            width="0.3" height="0.3"
+            material="transparent: true; side: double; shader: flat"
+            look-at="[camera]"
+            animation__fall="property: position; to: 0 -1 0; dur: 4500; loop: true"
+            animation__rotate="property: rotation; to: 360 360 360; dur: 3500; loop: true">
+        </a-plane>
+
+        <!-- 💖 WEDDING TITLE (VISIBLE NOW) -->
         <a-text 
             value="Rahul ❤️ Saira"
-            position="0 1.4 0"
+            position="0 1.8 0.2"
             align="center"
             color="#FFD700"
-            width="4"
+            scale="2 2 2"
             look-at="[camera]">
         </a-text>
 
-        <!-- 💍 Weds -->
+        <!-- 💍 SUBTITLE -->
         <a-text 
             value="Weds"
-            position="0 1.1 0"
+            position="0 1.5 0.2"
             align="center"
             color="white"
-            width="3"
+            scale="1.5 1.5 1.5"
             look-at="[camera]">
         </a-text>
 
-        <!-- 💬 Message -->
+        <!-- 💬 PERSONALIZED MESSAGE (BOTTOM FIXED) -->
         <a-text 
-            value="We invite you to celebrate our special day!"
-            position="0 0.2 0"
+            value="With great joy in our hearts,\nwe invite you to celebrate our special day.\nYour presence will make it even more memorable 💐"
+            position="0 -0.2 0.2"
             align="center"
             color="gold"
-            width="3"
-            look-at="[camera]">
+            width="4"
+            scale="1.2 1.2 1.2"
+            look-at="[camera]"
+            animation="property: opacity; from: 0; to: 1; dur: 2000">
         </a-text>
 
     </a-marker>
 
+    <!-- Camera -->
     <a-entity camera></a-entity>
 
 </a-scene>
