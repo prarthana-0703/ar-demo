@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  
+
   <!-- AR.js -->
   <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
 </head>
@@ -13,24 +13,17 @@
 <body style="margin: 0; overflow: hidden;">
 
   <a-scene embedded arjs>
-    
+
     <!-- Marker -->
     <a-marker preset="hiro">
-      
-      <!-- Cube -->
-      <a-box 
-        position="0 0.5 0"
-        material="color: blue;"
-        rotation="0 45 0"
-      >
-        <!-- Animation -->
-        <a-animation 
-          attribute="rotation"
-          to="0 360 0"
-          dur="3000"
-          repeat="indefinite">
-        </a-animation>
-      </a-box>
+
+      <!-- Wedding Gate Model -->
+      <a-entity
+        gltf-model="wedding_gate-v1.glb"
+        position="0 0 0"
+        scale="0.5 0.5 0.5"
+        rotation="0 0 0">
+      </a-entity>
 
     </a-marker>
 
