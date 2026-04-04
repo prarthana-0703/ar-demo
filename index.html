@@ -6,68 +6,91 @@
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 </head>
-  
+
 <body style="margin: 0; overflow: hidden;">
 
-<a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        renderer="logarithmicDepthBuffer: true;">
 
-    <a-light type="ambient" intensity="1"></a-light>
-    <a-light type="directional" position="1 2 1"></a-light>
+        <a-assets>
+            <a-asset-item id="gate-model" src="gate.glb"></a-asset-item>
+            <a-asset-item id="couple-model" src="couple.glb"></a-asset-item>
+            <img id="petal-texture" src="rose_petal.png">
+        </a-assets>
 
-    <a-marker preset="hiro">
+        <a-light type="ambient" intensity="1.2"></a-light>
+        <a-light type="directional" position="1 5 1" intensity="0.8"></a-light>
 
-        <a-entity 
-            gltf-model="wedding_gate-v1.glb"
-            position="0 0 0" 
-            scale="1.5 1.5 1.5">
-        </a-entity>
+        <a-marker preset="hiro">
 
-        <a-entity 
-            gltf-model="model-v1-v2-v1 (1).glb"
-            position="0 0.1 0"
-            scale="0.6 0.6 0.6">
-        </a-entity>
+            <a-entity 
+                id="gate"
+                gltf-model="#gate-model"
+                position="0 0 0"
+                scale="1 1 1"
+                rotation="0 0 0">
+            </a-entity>
 
-        <a-plane 
-            src="rose_petal.png"
-            position="-0.4 2 0"
-            width="0.3" height="0.3"
-            material="transparent: true; side: double; shader: flat"
-            animation__fall="property: position; to: -0.4 0 0; dur: 4000; loop: true"
-            animation__rotate="property: rotation; to: 360 360 360; dur: 3000; loop: true">
-        </a-plane>
+            <a-entity 
+                id="couple"
+                gltf-model="#couple-model"
+                position="0 0.1 0"
+                scale="0.5 0.5 0.5"
+                rotation="0 0 0">
+            </a-entity>
 
-        <a-text 
-            value="Rahul & Saira"
-            position="0 2.5 0"
-            align="center"
-            color="#FFD700"
-            scale="1.5 1.5 1.5"
-            look-at="[camera]">
-        </a-text>
+            <a-plane 
+                src="#petal-texture" 
+                position="-0.5 2 0" 
+                width="0.2" height="0.2"
+                material="transparent: true; side: double"
+                animation__fall="property: position; to: -0.5 0 0; dur: 4000; loop: true; easing: linear"
+                animation__rot="property: rotation; to: 0 360 360; dur: 3000; loop: true">
+            </a-plane>
 
-        <a-text 
-            value="Weds"
-            position="0 2.2 0"
-            align="center"
-            color="white"
-            scale="1 1 1"
-            look-at="[camera]">
-        </a-text>
+            <a-plane 
+                src="#petal-texture" 
+                position="0.5 2.5 0.2" 
+                width="0.2" height="0.2"
+                material="transparent: true; side: double"
+                animation__fall="property: position; to: 0.5 0 0.2; dur: 5000; loop: true; easing: linear"
+                animation__rot="property: rotation; to: 360 0 360; dur: 4000; loop: true">
+            </a-plane>
 
-        <a-text 
-            value="With great joy in our hearts,\nwe invite you to celebrate our special day."
-            position="0 0.5 1"
-            align="center"
-            color="gold"
-            width="3"
-            look-at="[camera]">
-        </a-text>
+            <a-text 
+                value="Rahul & Saira"
+                position="0 2.2 0"
+                align="center"
+                color="#FFD700"
+                width="6"
+                look-at="[camera]">
+            </a-text>
 
-    </a-marker>
+            <a-text 
+                value="Weds"
+                position="0 1.9 0"
+                align="center"
+                color="#FFFFFF"
+                width="4"
+                look-at="[camera]">
+            </a-text>
 
-    <a-entity camera></a-entity>
+            <a-text 
+                value="We invite you to celebrate our special day!"
+                position="0 0.5 1.2"
+                align="center"
+                color="#FFD700"
+                width="3.5"
+                look-at="[camera]">
+            </a-text>
 
-</a-scene>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+
+    </a-scene>
+
 </body>
 </html>
