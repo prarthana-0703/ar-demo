@@ -6,28 +6,28 @@
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
+  <!-- GLTF Loader -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe-gltf-model-plus/dist/aframe-gltf-model-plus.min.js"></script>
+
   <!-- AR.js -->
   <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
 </head>
 
 <body style="margin: 0; overflow: hidden;">
 
-  <a-scene embedded arjs>
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
 
-    <!-- Marker -->
     <a-marker preset="hiro">
 
-      <!-- Wedding Gate Model -->
       <a-entity
-        gltf-model="wedding_gate-v1.glb"
+        gltf-model="./wedding_gate-v1.glb"
         position="0 0 0"
-        scale="0.5 0.5 0.5"
+        scale="0.3 0.3 0.3"
         rotation="0 0 0">
       </a-entity>
 
     </a-marker>
 
-    <!-- Camera -->
     <a-entity camera></a-entity>
 
   </a-scene>
