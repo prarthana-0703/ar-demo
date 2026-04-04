@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wedding AR Invitation - Final Polish</title>
+    <title>Wedding AR Invitation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -18,8 +18,8 @@
         renderer="logarithmicDepthBuffer: true; antialias: true;"
         arjs="sourceType: webcam; debugUIEnabled: false;">
 
-        <a-assets>
-            <a-asset-item id="wedding-model" src="model-v1.glb"></a-asset-item>
+        <a-assets timeout="10000">
+            <a-asset-item id="wedding-model" src="model-v1.glb" crossorigin="anonymous"></a-asset-item>
         </a-assets>
 
         <a-marker preset="hiro">
@@ -30,14 +30,13 @@
                 color="#FFD700" 
                 position="0 1.8 0" 
                 rotation="-90 0 0"
-                width="5"
-                font="https://cdn.aframe.io/fonts/DejaVu-sdf.fnt">
+                width="5">
             </a-text>
 
             <a-entity 
                 gltf-model="#wedding-model"
-                scale="0.8 0.8 0.8" 
-                position="0 0.5 0"
+                scale="1 1 1" 
+                position="0 0.2 0"
                 rotation="-90 0 0">
             </a-entity>
 
@@ -47,8 +46,7 @@
                 color="#FFFFFF" 
                 position="0 0 0.8" 
                 rotation="-90 0 0"
-                width="3"
-                font="https://cdn.aframe.io/fonts/DejaVu-sdf.fnt">
+                width="3">
             </a-text>
 
             <a-text 
@@ -57,15 +55,13 @@
                 color="#FFC0CB" 
                 position="0 -0.1 1.4" 
                 rotation="-90 0 0"
-                width="2.8"
-                wrap-count="25"
-                font="https://cdn.aframe.io/fonts/DejaVu-sdf.fnt">
+                width="2.8">
             </a-text>
 
         </a-marker>
 
-        <a-entity light="type: ambient; intensity: 2.2;"></a-entity>
-        <a-entity light="type: directional; intensity: 1; position: 1 4 3;"></a-entity>
+        <a-entity light="type: ambient; intensity: 2.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.2; position: 1 4 3;"></a-entity>
         
         <a-entity camera></a-entity>
     </a-scene>
