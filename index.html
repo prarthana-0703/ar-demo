@@ -1,68 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wedding AR Invitation</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
-
-    <style>
-        body { margin: 0; overflow: hidden; background: black; }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
 </head>
 
-<body>
+<body style="margin:0; overflow:hidden;">
 
-<a-scene embedded vr-mode-ui="enabled: false"
-         arjs="sourceType: webcam; debugUIEnabled: false;">
+<a-scene embedded arjs="debugUIEnabled: true">
 
-    <a-assets>
-        <a-asset-item id="couple-model" src="./model-v1.glb"></a-asset-item>
-        <a-asset-item id="gate-model" src="./wedding_gate-v1.glb"></a-asset-item>
-        <img id="petal-texture" src="./petal.png">
-    </a-assets>
+  <a-marker preset="hiro">
+    <a-box position="0 0.5 0" color="red"></a-box>
+  </a-marker>
 
-    <a-marker preset="hiro">
-
-        <!-- Gate -->
-        <a-entity 
-            gltf-model="#gate-model"
-            scale="0.4 0.4 0.4" 
-            position="0 0 0"
-            rotation="0 0 0">
-        </a-entity>
-
-        <!-- Couple -->
-        <a-entity 
-            gltf-model="#couple-model"
-            scale="0.5 0.5 0.5" 
-            position="0 0 0.5"
-            rotation="0 0 0">
-        </a-entity>
-
-        <!-- Names -->
-        <a-text 
-            value="RAHUL WEDS KIARA" 
-            align="center" 
-            color="#FFD700" 
-            position="0 1 0" 
-            width="3">
-        </a-text>
-
-        <!-- Date -->
-        <a-text 
-            value="SAVE THE DATE: 25.12.2026" 
-            align="center" 
-            color="#FFFFFF" 
-            position="0 0.5 0" 
-            width="2">
-        </a-text>
-
-    </a-marker>
-
-    <a-entity light="type: ambient; intensity: 2;"></a-entity>
-    <a-entity camera></a-entity>
+  <a-entity camera></a-entity>
 
 </a-scene>
 
